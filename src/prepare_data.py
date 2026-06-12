@@ -31,7 +31,7 @@ from config import (
     WORDS_DIR,
 )
 from data_augmentation import augment_all
-from public_datasets import import_cmu_kids, import_fsdd, import_speech_commands
+from public_datasets import import_fsdd, import_speech_commands
 
 
 def scan_audio_files(root: Path) -> list[dict]:
@@ -215,7 +215,7 @@ def main() -> None:
     parser.add_argument("--no-augment", action="store_true")
     parser.add_argument("--augment-factor", type=int, default=AUGMENT_FACTOR)
     parser.add_argument(
-        "--import-public", choices=["fsdd", "speech_commands", "cmu_kids", "all"],
+        "--import-public", choices=["fsdd", "speech_commands", "all"],
         help="Import public datasets before processing",
     )
     args = parser.parse_args()
@@ -225,8 +225,6 @@ def main() -> None:
             import_fsdd()
         if args.import_public in ("speech_commands", "all"):
             import_speech_commands()
-        if args.import_public in ("cmu_kids", "all"):
-            import_cmu_kids()
 
     datasets = (
         ["letters", "words"] if args.dataset == "both" else [args.dataset]

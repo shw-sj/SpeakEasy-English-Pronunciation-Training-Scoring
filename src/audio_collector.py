@@ -146,7 +146,7 @@ def main() -> None:
     )
     parser.add_argument("--letter-repeats", type=int, default=10)
     parser.add_argument("--word-repeats", type=int, default=5)
-    parser.add_argument("--duration", type=float, default=2.5,
+    parser.add_argument("--duration", type=float, default=1,
                         help="Max recording duration (seconds)")
     args = parser.parse_args()
 

@@ -128,37 +128,3 @@ def import_speech_commands(
 
     print(f"Imported {len(records)} Speech Commands recordings")
     return records
-
-
-def import_cmu_kids(output_dir: Path = WORDS_DIR) -> list[dict]:
-    """
-    Import CMU Kids Corpus (requires CMU SLTools account).
-    Place extracted data at data/_cache/cmu_kids/
-    Expected layout: *.wav files with transcript metadata.
-    """
-    cache = output_dir.parent / "_cache" / "cmu_kids"
-    if not cache.exists():
-        print(
-            "[INFO] CMU Kids Corpus not found. Download from:\n"
-            "  https://www.cs.cmu.edu/~robust/Publications/KidsSpeech/\n"
-            f"  Extract to: {cache}"
-        )
-        return []
-
-    records = []
-    for wav in sorted(cache.rglob("*.wav")):
-        label = wav.stem.lower()
-        speaker = wav.parent.name
-        dest = output_dir / speaker / label / wav.name
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        audio, sr = load_audio(str(wav))
-        save_audio(str(dest), audio, SAMPLE_RATE)
-        records.append({
-            "audio_path": str(dest),
-            "label": label,
-            "speaker": speaker,
-            "source": "cmu_kids",
-        })
-
-    print(f"Imported {len(records)} CMU Kids recordings")
-    return records

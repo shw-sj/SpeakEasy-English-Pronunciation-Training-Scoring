@@ -23,34 +23,10 @@ from config import (
     TEMPLATES_DIR,
 )
 
-
-def generate_tts_pyttsx3(text: str, output_path: Path, rate: int = 150) -> bool:
-    """Generate speech using pyttsx3 (offline, cross-platform)."""
-    try:
-        import pyttsx3
-    except ImportError:
-        return False
-
-    engine = pyttsx3.init()
-    engine.setProperty("rate", rate)
-    voices = engine.getProperty("voices")
-    for v in voices:
-        if "english" in v.name.lower() or "en" in v.id.lower():
-            engine.setProperty("voice", v.id)
-            break
-
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    engine.save_to_file(text, str(output_path))
-    engine.runAndWait()
-    return output_path.exists()
-
+from gtts import gTTS
 
 def generate_tts_gtts(text: str, output_path: Path, lang: str = "en") -> bool:
     """Generate speech using gTTS (requires internet)."""
-    try:
-        from gtts import gTTS
-    except ImportError:
-        return False
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     tts = gTTS(text=text, lang=lang)
@@ -70,17 +46,13 @@ def generate_tts_gtts(text: str, output_path: Path, lang: str = "en") -> bool:
 def generate_template_audio(
     label: str,
     output_dir: Path,
-    engine: str = "pyttsx3",
 ) -> Path | None:
     """Generate a standard pronunciation WAV for *label*."""
     output_path = output_dir / f"{label.lower()}.wav"
     if output_path.exists():
         return output_path
 
-    if engine == "pyttsx3":
-        ok = generate_tts_pyttsx3(label, output_path)
-    else:
-        ok = generate_tts_gtts(label, output_path)
+    ok = generate_tts_gtts(label, output_path)
 
     if not ok:
         print(f"  [WARN] Failed to generate TTS for '{label}'")
@@ -91,7 +63,6 @@ def generate_template_audio(
 def build_templates(
     labels: list[str] | None = None,
     output_dir: Path = TEMPLATES_DIR,
-    engine: str = "pyttsx3",
 ) -> dict[str, np.ndarray]:
     """
     Generate standard pronunciation audio and extract MFCC template features.
@@ -103,7 +74,7 @@ def build_templates(
 
     print(f"Building templates for {len(labels)} labels …")
     for label in labels:
-        path = generate_template_audio(label, audio_dir, engine)
+        path = generate_template_audio(label, audio_dir)
         if path is None:
             continue
         audio, sr = load_audio(str(path))
@@ -149,9 +120,7 @@ def load_templates(path: Path) -> dict[str, np.ndarray]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build pronunciation templates")
-    parser.add_argument(
-        "--engine", choices=["pyttsx3", "gtts"], default="pyttsx3",
-    )
+
     parser.add_argument(
         "--labels", nargs="*", default=None,
         help="Specific labels (default: all letters + words)",
@@ -161,7 +130,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    templates = build_templates(args.labels, engine=args.engine)
+    templates = build_templates(args.labels)
     save_templates(templates, fmt=args.format)
 
 

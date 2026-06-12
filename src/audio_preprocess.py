@@ -52,7 +52,7 @@ def normalize_amplitude(audio: np.ndarray) -> np.ndarray:
 
 
 def _frame_signal(signal: np.ndarray, frame_len: int, hop: int) -> np.ndarray:
-    n_frames = max(1, 1 + (len(signal) - frame_len) // hop)
+    n_frames = max(1, int(np.ceil((len(signal) - frame_len) / hop)) + 1)
     frames = np.zeros((n_frames, frame_len), dtype=np.float32)
     for i in range(n_frames):
         start = i * hop

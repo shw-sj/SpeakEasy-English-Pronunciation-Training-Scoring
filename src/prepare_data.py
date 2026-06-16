@@ -13,9 +13,9 @@ import json
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import GroupShuffleSplit
+from sklearn.model_selection import GroupShuffleSplit, train_test_split
 
-from audio_feature import extract_features, feature_dim
+from audio_feature import extract_features, extract_mfcc_sequence, feature_dim
 from audio_preprocess import load_audio, preprocess_audio, save_audio
 from config import (
     AUGMENT_FACTOR,
@@ -60,11 +60,39 @@ def speaker_independent_split(
     test_ratio: float = TEST_RATIO,
     seed: int = RANDOM_SEED,
 ) -> dict[str, list[dict]]:
-    """Split records by speaker so no speaker appears in multiple splits."""
+    """Split records by speaker so no speaker appears in multiple splits.
+
+    Falls back to stratified sample-level split when there is only 1 speaker,
+    because GroupShuffleSplit requires ≥2 groups to produce non-empty splits.
+    """
     assert abs(train_ratio + val_ratio + test_ratio - 1.0) < 1e-6
 
     speakers = sorted({r["speaker"] for r in records})
-    speaker_labels = {s: s for s in speakers}
+
+    # ── Fallback: single speaker → split by samples (stratified) ──
+    if len(speakers) < 2:
+        print(f"  [INFO] Only {len(speakers)} speaker(s), using sample-level "
+              f"stratified split instead of speaker-independent split.")
+        labels = [r["label"] for r in records]
+
+        # 60% train, 40% rest
+        train, rest, _, rest_labels = train_test_split(
+            records, labels,
+            test_size=1 - train_ratio,
+            random_state=seed,
+            stratify=labels,
+        )
+        # From the 40% rest: half val, half test (i.e. 20% / 20%)
+        val_fraction = val_ratio / (val_ratio + test_ratio)  # 0.2 / 0.4 = 0.5
+        val, test = train_test_split(
+            rest,
+            test_size=1 - val_fraction,
+            random_state=seed,
+            stratify=rest_labels,
+        )
+        return {"train": train, "val": val, "test": test}
+
+    # ── Multi-speaker: GroupShuffleSplit ──
     groups = np.array([r["speaker"] for r in records])
 
     gss1 = GroupShuffleSplit(n_splits=1, test_size=1 - train_ratio, random_state=seed)
@@ -162,8 +190,13 @@ def export_features(
     splits: dict[str, list[dict]],
     output_dir: Path,
     dataset_type: str,
+    export_sequences: bool = False,
 ) -> None:
-    """Export features as .npy arrays and a manifest .csv."""
+    """Export features as .npy arrays and a manifest .csv.
+
+    When ``export_sequences`` is True, also exports per-frame MFCC
+    sequences as .npz archives suitable for sequential model training.
+    """
     output_dir.mkdir(parents=True, exist_ok=True)
 
     for split_name, records in splits.items():
@@ -187,6 +220,81 @@ def export_features(
         df.to_csv(csv_path, index=False)
 
         print(f"  {split_name}: {features.shape} → {npy_path.name}, {csv_path.name}")
+
+    if export_sequences:
+        print("\n--- Exporting frame-level MFCC sequences ---")
+        export_frame_sequences(splits, output_dir, dataset_type)
+
+
+def export_frame_sequences(
+    splits: dict[str, list[dict]],
+    output_dir: Path,
+    dataset_type: str,
+) -> None:
+    """
+    Export per-frame MFCC sequences as .npz archives for sequential model training.
+
+    Unlike ``export_features`` which saves aggregated (78,) vectors, this
+    preserves the full temporal structure ``(T, 39)`` per utterance so
+    sequential models can capture genuine temporal dynamics.  A companion ``_seq_meta.npy``
+    stores the frame count of every sample, enabling fast 95‑th‑percentile
+    computation without loading the full sequence array.
+    """
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    for split_name, records in splits.items():
+        if not records:
+            continue
+
+        sequences = []          # ragged arrays, each (T_i, 39)
+        frame_counts = []       # T_i per sample
+        labels = []
+        paths = []
+
+        for r in records:
+            proc_path = r.get("processed_path", r["audio_path"])
+            try:
+                audio, sr = load_audio(proc_path)
+                # audio was already preprocessed → skip redundant VAD/norm
+                seq = extract_mfcc_sequence(
+                    audio, sr, preprocess=False, max_frames=None,
+                )  # (T, 39) variable length
+            except Exception as e:
+                print(f"  [WARN] skipping {proc_path}: {e}")
+                continue
+
+            sequences.append(seq)
+            frame_counts.append(seq.shape[0])
+            labels.append(r["label"])
+            paths.append(proc_path)
+
+        if not sequences:
+            print(f"  [WARN] No valid sequences for {split_name}")
+            continue
+
+        # Save as compressed archive — one key per sample
+        npz_path = output_dir / f"{dataset_type}_{split_name}_sequences.npz"
+        arrays = {f"seq_{i:06d}": seq for i, seq in enumerate(sequences)}
+        np.savez_compressed(npz_path, **arrays)
+
+        # Save frame-count metadata for fast lookup
+        meta_path = output_dir / f"{dataset_type}_{split_name}_seq_meta.npy"
+        np.save(meta_path, np.array(frame_counts, dtype=np.int32))
+
+        # Save companion manifest (same columns as the aggregated one)
+        csv_path = output_dir / f"{dataset_type}_{split_name}_seq_manifest.csv"
+        pd.DataFrame({
+            "audio_path": paths,
+            "label": labels,
+            "speaker": [r["speaker"] for r in records],
+            "augmentation": [r.get("augmentation", "original") for r in records],
+            "num_frames": frame_counts,
+        }).to_csv(csv_path, index=False)
+
+        total_frames = sum(frame_counts)
+        avg_frames = total_frames / len(sequences)
+        print(f"  {split_name}: {len(sequences)} seqs, "
+              f"avg {avg_frames:.0f} frames → {npz_path.name}, {meta_path.name}")
 
 
 def save_split_manifest(
@@ -214,6 +322,8 @@ def main() -> None:
     )
     parser.add_argument("--no-augment", action="store_true")
     parser.add_argument("--augment-factor", type=int, default=AUGMENT_FACTOR)
+    parser.add_argument("--export-sequences", action="store_true",
+                        help="Also export per-frame MFCC sequences (.npz) for sequential model training")
     parser.add_argument(
         "--import-public", choices=["fsdd", "speech_commands", "all"],
         help="Import public datasets before processing",
@@ -241,7 +351,8 @@ def main() -> None:
         )
         if not splits:
             continue
-        export_features(splits, FEATURES_DIR, ds)
+        export_features(splits, FEATURES_DIR, ds,
+                        export_sequences=args.export_sequences)
         save_split_manifest(splits, ds)
 
     print("\nDone.")

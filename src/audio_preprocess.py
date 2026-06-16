@@ -52,7 +52,12 @@ def normalize_amplitude(audio: np.ndarray) -> np.ndarray:
 
 
 def _frame_signal(signal: np.ndarray, frame_len: int, hop: int) -> np.ndarray:
+    """Split signal into overlapping frames, zero-padding the last frame if needed."""
     n_frames = max(1, int(np.ceil((len(signal) - frame_len) / hop)) + 1)
+    # Zero-pad signal so the last frame always has frame_len samples
+    needed = (n_frames - 1) * hop + frame_len
+    if needed > len(signal):
+        signal = np.pad(signal, (0, needed - len(signal)))
     frames = np.zeros((n_frames, frame_len), dtype=np.float32)
     for i in range(n_frames):
         start = i * hop

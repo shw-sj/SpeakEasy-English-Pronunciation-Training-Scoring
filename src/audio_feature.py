@@ -110,6 +110,65 @@ def aggregate_features(mfcc: np.ndarray) -> np.ndarray:
     return np.concatenate(parts).astype(np.float32)
 
 
+def extract_mfcc_sequence(
+    audio: np.ndarray,
+    sr: int = SAMPLE_RATE,
+    n_mfcc: int = N_MFCC,
+    max_frames: int | None = None,
+    preprocess: bool = True,
+) -> np.ndarray:
+    """
+    Extract frame-level MFCC + Δ + ΔΔ as a time sequence.
+
+    Unlike ``extract_features`` which aggregates across all frames into a
+    single 78‑dim vector, this returns the full per‑frame feature matrix
+    so that sequential models can capture genuine temporal structure.
+
+    Parameters
+    ----------
+    audio : ndarray
+        Raw audio samples (float32).
+    sr : int
+        Sample rate (default 16000).
+    n_mfcc : int
+        Number of MFCC coefficients per frame (default 13).
+    max_frames : int or None
+        If provided, longer sequences are truncated and shorter ones are
+        zero-padded so the output always has exactly ``max_frames`` rows.
+    preprocess : bool
+        Whether to apply VAD, normalisation, and pre-emphasis before
+        feature extraction.
+
+    Returns
+    -------
+    features : ndarray (float32)
+        Shape ``(n_frames, n_mfcc * 3)`` if ``max_frames`` is None,
+        or ``(max_frames, n_mfcc * 3)`` otherwise.
+        The 3 channels per frame are: static MFCC, Δ, ΔΔ.
+    """
+    if preprocess:
+        audio = preprocess_audio(audio, sr)
+
+    mfcc = compute_mfcc_frames(audio, sr, n_mfcc)          # (T, 13)
+    delta = compute_delta(mfcc)                             # (T, 13)
+    delta2 = compute_delta(delta)                           # (T, 13)
+
+    features = np.concatenate([mfcc, delta, delta2], axis=1)  # (T, 39)
+
+    if max_frames is not None:
+        n_frames = features.shape[0]
+        if n_frames > max_frames:
+            features = features[:max_frames, :]
+        elif n_frames < max_frames:
+            pad = np.zeros(
+                (max_frames - n_frames, features.shape[1]),
+                dtype=np.float32,
+            )
+            features = np.concatenate([features, pad], axis=0)
+
+    return features.astype(np.float32)
+
+
 def extract_features(
     audio: np.ndarray,
     sr: int = SAMPLE_RATE,

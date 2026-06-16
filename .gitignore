@@ -10,8 +10,12 @@ venv/
 data/raw/
 data/processed/
 data/features/
+data/_cache/
 *.pkl
 *.npy
+
+# Claude
+.claude/
 
 # IDE
 .idea/
@@ -21,3 +25,4 @@ data/features/
 # OS
 .DS_Store
 Thumbs.db
+models/

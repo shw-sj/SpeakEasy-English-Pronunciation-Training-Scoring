@@ -1,0 +1,19 @@
+{
+  "sample_rate": 16000,
+  "channels": 1,
+  "mfcc": {
+    "n_mfcc": 13,
+    "n_mel_filters": 26,
+    "n_fft": 512,
+    "frame_length_ms": 25,
+    "frame_shift_ms": 10
+  },
+  "models": {
+    "bp_letters": "results/bp_letters_model.pth",
+    "bp_words": "results/bp_words_model.pth",
+    "cnn_letters": "results/best_cnn_letters_model.pth",
+    "cnn_words": "results/best_cnn_words_model.pth"
+  },
+  "standard_audio_dir": "data/templates/gui_standard",
+  "default_duration_seconds": 1.5
+}

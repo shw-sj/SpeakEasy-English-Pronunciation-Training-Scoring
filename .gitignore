@@ -9,7 +9,7 @@ venv/
 # Data & artifacts
 data/raw/_cache
 data/raw/words
-data/processed/
+data/processed/words
 data/features/
 *.pkl
 *.npy

@@ -25,10 +25,26 @@ matplotlib.rcParams['axes.unicode_minus'] = False
 import time
 import json
 import os
+import copy
 from collections import OrderedDict
+import torch
+from torch import nn
 
-from bp_network import BPNeuralNetwork
+from bp_network import BPNetwork
 from metrics import plot_training_curves, plot_model_comparison_bar, plot_model_radar
+
+
+def _target_tensor(y, device):
+    if isinstance(y, np.ndarray) and y.ndim == 2:
+        y = np.argmax(y, axis=1)
+    return torch.as_tensor(y, dtype=torch.long, device=device)
+
+
+def _predict_labels(model, x, device):
+    model.eval()
+    with torch.no_grad():
+        x_tensor = torch.as_tensor(x, dtype=torch.float32, device=device)
+        return model(x_tensor).argmax(dim=1).cpu().numpy()
 
 
 # ====================================================================
@@ -63,7 +79,7 @@ class HyperparameterTuner:
         os.makedirs(save_dir, exist_ok=True)
 
     # ==================== 单次实验 ====================
-    def run_experiment(self, name, hidden_dims, activation, lr,
+    def run_experiment(self, name, lr,
                        epochs=80, batch_size=32, early_stop_patience=15,
                        verbose=True):
         """
@@ -75,17 +91,18 @@ class HyperparameterTuner:
             print(f"\n{'='*60}")
             print(f"Experiment: {name}")
             print(f"{'='*60}")
-            print(f"  Hidden: {hidden_dims}, Activation: {activation}, "
-                  f"LR: {lr}, Epochs: {epochs}")
+            print(f"  LR: {lr}, Epochs: {epochs}")
 
         # 创建BP网络
-        bp = BPNeuralNetwork(
-            input_dim=self.input_dim,
-            hidden_dims=hidden_dims,
-            output_dim=self.num_classes,
-            activation=activation,
-            lr=lr,
+        bp = BPNetwork(
+            input_size=self.input_dim,
+            output_size=self.num_classes,
+            task="letters",
         )
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        bp = bp.to(device)
+        criterion = nn.CrossEntropyLoss()
+        optimizer = torch.optim.Adam(bp.parameters(), lr=lr)
 
         # 训练追踪
         train_losses = []
@@ -95,8 +112,7 @@ class HyperparameterTuner:
         best_val_acc = 0.0
         best_epoch = 0
         patience_counter = 0
-        best_weights = None
-        best_biases = None
+        best_state = None
 
         t_start = time.time()
 
@@ -110,19 +126,29 @@ class HyperparameterTuner:
             for start in range(0, n, batch_size):
                 end = min(start + batch_size, n)
                 bi = indices[start:end]
-                loss = bp.train_step(self.X_train[bi], self.y_train[bi])
-                epoch_loss += loss * len(bi)
+                x_batch = torch.as_tensor(self.X_train[bi], dtype=torch.float32, device=device)
+                y_batch = _target_tensor(self.y_train[bi], device)
+                optimizer.zero_grad(set_to_none=True)
+                logits = bp(x_batch)
+                loss = criterion(logits, y_batch)
+                loss.backward()
+                optimizer.step()
+                epoch_loss += float(loss.item()) * len(bi)
 
             avg_loss = epoch_loss / n
             train_losses.append(avg_loss)
 
             # ---- 验证 ----
-            val_pred = bp.forward(self.X_val)
-            val_loss = bp.cross_entropy_loss(val_pred, self.y_val)
+            bp.eval()
+            with torch.no_grad():
+                val_x = torch.as_tensor(self.X_val, dtype=torch.float32, device=device)
+                val_y = _target_tensor(self.y_val, device)
+                val_pred = bp(val_x)
+                val_loss = float(criterion(val_pred, val_y).item())
             val_losses.append(val_loss)
 
-            val_pred_lbl = bp.predict(self.X_val)
-            val_true_lbl = np.argmax(self.y_val, axis=1)
+            val_pred_lbl = val_pred.argmax(dim=1).cpu().numpy()
+            val_true_lbl = np.argmax(self.y_val, axis=1) if self.y_val.ndim == 2 else self.y_val
             val_acc = np.mean(val_pred_lbl == val_true_lbl)
             val_accuracies.append(val_acc)
 
@@ -132,8 +158,7 @@ class HyperparameterTuner:
                 best_val_acc = val_acc
                 best_epoch = epoch
                 patience_counter = 0
-                best_weights = [w.copy() for w in bp.weights]
-                best_biases = [b.copy() for b in bp.biases]
+                best_state = copy.deepcopy(bp.state_dict())
             else:
                 patience_counter += 1
 
@@ -147,21 +172,18 @@ class HyperparameterTuner:
                       f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f}")
 
         # ---- 测试 ----
-        if best_weights is not None:
-            bp.weights = best_weights
-            bp.biases = best_biases
+        if best_state is not None:
+            bp.load_state_dict(best_state)
 
-        test_pred = bp.predict(self.X_test)
-        test_true = np.argmax(self.y_test, axis=1)
+        test_pred = _predict_labels(bp, self.X_test, device)
+        test_true = np.argmax(self.y_test, axis=1) if self.y_test.ndim == 2 else self.y_test
         test_acc = np.mean(test_pred == test_true)
 
         train_time = time.time() - t_start
-        total_params = sum(w.size for w in bp.weights) + sum(b.size for b in bp.biases)
+        total_params = sum(p.numel() for p in bp.parameters())
 
         result = {
             "name": name,
-            "hidden_dims": hidden_dims,
-            "activation": activation,
             "lr": lr,
             "test_accuracy": float(test_acc),
             "best_val_accuracy": float(best_val_acc),
@@ -182,48 +204,7 @@ class HyperparameterTuner:
 
         return result
 
-    # ==================== 实验1：隐含层结构对比 ====================
-    def experiment_hidden_layers(self, epochs=60):
-        print("\n" + "=" * 65)
-        print("Experiment 1: Hidden Layer Structure Comparison")
-        print("=" * 65)
-
-        configs = [
-            ("Single-128", [128], 'relu', 0.01),
-            ("Single-256", [256], 'relu', 0.01),
-            ("Double-256-128", [256, 128], 'relu', 0.01),
-            ("Double-128-64", [128, 64], 'relu', 0.01),
-        ]
-
-        results = []
-        for name, hd, act, lr in configs:
-            r = self.run_experiment(name, hd, act, lr, epochs=epochs)
-            results.append(r)
-
-        self._plot_hidden_comparison(results)
-        return results
-
-    # ==================== 实验2：激活函数对比 ====================
-    def experiment_activations(self, epochs=60):
-        print("\n" + "=" * 65)
-        print("Experiment 2: Activation Function Comparison")
-        print("=" * 65)
-
-        configs = [
-            ("Sigmoid", [256, 128], 'sigmoid', 0.01),
-            ("ReLU", [256, 128], 'relu', 0.01),
-            ("Tanh", [256, 128], 'tanh', 0.01),
-        ]
-
-        results = []
-        for name, hd, act, lr in configs:
-            r = self.run_experiment(name, hd, act, lr, epochs=epochs)
-            results.append(r)
-
-        self._bar_plot(results, 'activation_comparison.png', 'Activation Function')
-        return results
-
-    # ==================== 实验3：学习率对比 ====================
+    # ==================== 实验1：学习率对比 ====================
     def experiment_learning_rates(self, epochs=60):
         print("\n" + "=" * 65)
         print("Experiment 3: Learning Rate Comparison")
@@ -238,7 +219,7 @@ class HyperparameterTuner:
 
         results = []
         for name, hd, act, lr in configs:
-            r = self.run_experiment(name, hd, act, lr, epochs=epochs)
+            r = self.run_experiment(name, lr, epochs=epochs)
             results.append(r)
 
         # 学习率对比 + 收敛曲线
@@ -254,8 +235,7 @@ class HyperparameterTuner:
         results = []
         for patience in [5, 10, 15, 20, 30]:
             name = f"Patience={patience}"
-            r = self.run_experiment(name, [256, 128], 'relu', 0.01,
-                                    epochs=epochs, early_stop_patience=patience)
+            r = self.run_experiment(name, 0.01, epochs=epochs, early_stop_patience=patience)
             results.append(r)
 
         self._plot_patience_comparison(results)
@@ -288,8 +268,7 @@ class HyperparameterTuner:
         best = sorted_r[0]
         print(f"\nBest Config: {best['name']}")
         print(f"  Test Accuracy: {best['test_accuracy']:.4f}")
-        print(f"  Hidden: {best['hidden_dims']}, Activation: {best['activation']}, "
-              f"LR: {best['lr']}")
+        print(f"  LR: {best['lr']}")
         print(f"  Best Epoch: {best['best_epoch']}/{best['total_epochs']}")
 
         # 保存JSON
@@ -300,8 +279,6 @@ class HyperparameterTuner:
                     "name": r["name"],
                     "test_accuracy": r["test_accuracy"],
                     "best_val_accuracy": r["best_val_accuracy"],
-                    "hidden_dims": r["hidden_dims"],
-                    "activation": r["activation"],
                     "lr": r["lr"],
                     "train_time_s": r["train_time_s"],
                     "params_count": r["params_count"],
@@ -331,33 +308,6 @@ class HyperparameterTuner:
         plt.tight_layout()
 
         fp = os.path.join(self.save_dir, filename)
-        plt.savefig(fp, dpi=300, bbox_inches='tight')
-        plt.close()
-        print(f"[OK] Chart saved: {fp}")
-
-    def _plot_hidden_comparison(self, results):
-        names = [r['name'] for r in results]
-        accs = [r['test_accuracy'] for r in results]
-        params = [r['params_count'] for r in results]
-        best_idx = np.argmax(accs)
-        colors = ['#2ecc71' if i == best_idx else '#3498db'
-                  for i in range(len(names))]
-
-        fig, axes = plt.subplots(1, 2, figsize=(12, 4.5))
-        axes[0].bar(names, accs, color=colors, edgecolor='white')
-        axes[0].set_title('Test Accuracy'); axes[0].set_ylim(0, 1)
-        axes[0].tick_params(axis='x', rotation=30)
-        for i, v in enumerate(accs):
-            axes[0].text(i, v + 0.01, f'{v:.4f}', ha='center')
-
-        axes[1].bar(names, params, color=colors, edgecolor='white')
-        axes[1].set_title('Parameters Count')
-        axes[1].tick_params(axis='x', rotation=30)
-        for i, v in enumerate(params):
-            axes[1].text(i, v + max(params)*0.02, f'{v:,}', ha='center')
-
-        plt.tight_layout()
-        fp = os.path.join(self.save_dir, 'hidden_layer_comparison.png')
         plt.savefig(fp, dpi=300, bbox_inches='tight')
         plt.close()
         print(f"[OK] Chart saved: {fp}")
@@ -443,40 +393,49 @@ def experiment_data_augmentation(X_clean, y_clean, X_augmented, y_augmented,
     ]:
         print(f"\nTraining: {name} (samples={X_tr.shape[0]})")
 
-        bp = BPNeuralNetwork(
-            input_dim=X_tr.shape[1],
-            hidden_dims=[256, 128],
-            output_dim=num_classes,
-            activation='relu',
-            lr=0.01,
+        bp = BPNetwork(
+            input_size=X_tr.shape[1],
+            output_size=num_classes,
+            task="letters",
         )
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        bp = bp.to(device)
+        criterion = nn.CrossEntropyLoss()
+        optimizer = torch.optim.Adam(bp.parameters(), lr=0.01)
 
         best_val_acc = 0
-        best_weights = None
-        best_biases = None
+        best_state = None
 
         t_start = time.time()
         for epoch in range(1, 81):
-            bp.train_step(X_tr, y_tr)
+            bp.train()
+            x_tensor = torch.as_tensor(X_tr, dtype=torch.float32, device=device)
+            y_tensor = _target_tensor(y_tr, device)
+            optimizer.zero_grad(set_to_none=True)
+            logits = bp(x_tensor)
+            loss = criterion(logits, y_tensor)
+            loss.backward()
+            optimizer.step()
 
-            val_pred = bp.forward(X_val)
-            val_pred_lbl = np.argmax(val_pred, axis=1)
-            val_true_lbl = np.argmax(y_val, axis=1)
+            bp.eval()
+            with torch.no_grad():
+                val_x = torch.as_tensor(X_val, dtype=torch.float32, device=device)
+                val_pred = bp(val_x)
+            val_pred_lbl = val_pred.argmax(dim=1).cpu().numpy()
+            val_true_lbl = np.argmax(y_val, axis=1) if y_val.ndim == 2 else y_val
             val_acc = np.mean(val_pred_lbl == val_true_lbl)
 
             if val_acc > best_val_acc:
                 best_val_acc = val_acc
-                best_weights = [w.copy() for w in bp.weights]
-                best_biases = [b.copy() for b in bp.biases]
+                best_state = copy.deepcopy(bp.state_dict())
 
         train_time = time.time() - t_start
 
-        if best_weights is not None:
-            bp.weights = best_weights
-            bp.biases = best_biases
+        if best_state is not None:
+            bp.load_state_dict(best_state)
 
-        test_pred = bp.predict(X_test)
-        test_true = np.argmax(y_test, axis=1)
+        test_pred = _predict_labels(bp, X_test, device)
+        test_true = np.argmax(y_test, axis=1) if y_test.ndim == 2 else y_test
         test_acc = np.mean(test_pred == test_true)
 
         r = {"name": name, "test_acc": float(test_acc),
@@ -580,16 +539,6 @@ def run_full_tuning(X_train, y_train, X_val, y_val, X_test, y_test,
         num_classes=num_classes, class_names=class_names, save_dir=save_dir)
 
     # 依次运行各实验
-    try:
-        tuner.experiment_hidden_layers(epochs=50)
-    except Exception as e:
-        print(f"[WARNING] Hidden layer experiment failed: {e}")
-
-    try:
-        tuner.experiment_activations(epochs=50)
-    except Exception as e:
-        print(f"[WARNING] Activation experiment failed: {e}")
-
     try:
         tuner.experiment_learning_rates(epochs=50)
     except Exception as e:

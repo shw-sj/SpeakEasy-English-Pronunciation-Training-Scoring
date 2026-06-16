@@ -10,3 +10,5 @@ torchaudio==2.11.0
 pyttsx3>=2.90
 gTTS>=2.5
 tqdm>=4.65
+matplotlib>=3.7
+PyQt5>=5.15

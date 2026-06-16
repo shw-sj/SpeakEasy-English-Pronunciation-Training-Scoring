@@ -7,10 +7,10 @@ venv/
 .env
 
 # Data & artifacts
-data/raw/
+data/raw/_cache
+data/raw/words
 data/processed/
 data/features/
-data/_cache/
 *.pkl
 *.npy
 
@@ -25,4 +25,5 @@ data/_cache/
 # OS
 .DS_Store
 Thumbs.db
-models/
+
+AGENTS.md

@@ -1,0 +1,1822 @@
+[
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\A\\A_0001.wav",
+    "label": "A",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:26:19.057237"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\A\\A_0002.wav",
+    "label": "A",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:26:21.267326"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\A\\A_0003.wav",
+    "label": "A",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:26:23.372514"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\A\\A_0004.wav",
+    "label": "A",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:26:25.304447"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\A\\A_0005.wav",
+    "label": "A",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:26:27.272195"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\A\\A_0006.wav",
+    "label": "A",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:26:29.170962"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\A\\A_0007.wav",
+    "label": "A",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:26:31.083744"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\A\\A_0008.wav",
+    "label": "A",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:26:32.998297"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\A\\A_0009.wav",
+    "label": "A",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:26:34.997678"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\A\\A_0010.wav",
+    "label": "A",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:26:36.897691"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\B\\B_0001.wav",
+    "label": "B",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:26:39.474352"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\B\\B_0002.wav",
+    "label": "B",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:26:41.526987"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\B\\B_0003.wav",
+    "label": "B",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:26:43.536808"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\B\\B_0004.wav",
+    "label": "B",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:26:45.503565"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\B\\B_0005.wav",
+    "label": "B",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:26:47.433133"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\B\\B_0006.wav",
+    "label": "B",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:26:49.401042"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\B\\B_0007.wav",
+    "label": "B",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:26:51.298968"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\B\\B_0008.wav",
+    "label": "B",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:26:53.300985"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\B\\B_0009.wav",
+    "label": "B",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:26:55.230441"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\B\\B_0010.wav",
+    "label": "B",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:26:57.199142"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\C\\C_0001.wav",
+    "label": "C",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:26:59.330279"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\C\\C_0002.wav",
+    "label": "C",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:27:01.337518"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\C\\C_0003.wav",
+    "label": "C",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:27:03.382648"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\C\\C_0004.wav",
+    "label": "C",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:27:05.307782"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\C\\C_0005.wav",
+    "label": "C",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:27:07.332323"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\C\\C_0006.wav",
+    "label": "C",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:27:09.318043"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\C\\C_0007.wav",
+    "label": "C",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:27:11.366649"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\C\\C_0008.wav",
+    "label": "C",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:27:13.425411"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\C\\C_0009.wav",
+    "label": "C",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:27:15.315525"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\C\\C_0010.wav",
+    "label": "C",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:27:17.252737"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\D\\D_0001.wav",
+    "label": "D",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:27:51.918723"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\D\\D_0002.wav",
+    "label": "D",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:27:53.824193"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\D\\D_0003.wav",
+    "label": "D",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:27:55.847830"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\D\\D_0004.wav",
+    "label": "D",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:27:57.743745"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\D\\D_0005.wav",
+    "label": "D",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:27:59.841191"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\D\\D_0006.wav",
+    "label": "D",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:28:01.649413"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\D\\D_0007.wav",
+    "label": "D",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:28:03.519863"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\D\\D_0008.wav",
+    "label": "D",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:28:05.423672"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\D\\D_0009.wav",
+    "label": "D",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:28:07.557168"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\D\\D_0010.wav",
+    "label": "D",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:28:09.530835"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\E\\E_0001.wav",
+    "label": "E",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:28:11.915584"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\E\\E_0002.wav",
+    "label": "E",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:28:14.758361"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\E\\E_0003.wav",
+    "label": "E",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:28:16.724664"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\E\\E_0004.wav",
+    "label": "E",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:28:18.929688"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\E\\E_0005.wav",
+    "label": "E",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:28:20.871650"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\E\\E_0006.wav",
+    "label": "E",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:28:22.929245"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\E\\E_0007.wav",
+    "label": "E",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:28:24.790434"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\E\\E_0008.wav",
+    "label": "E",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:28:26.641875"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\E\\E_0009.wav",
+    "label": "E",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:28:28.588660"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\E\\E_0010.wav",
+    "label": "E",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:28:30.418833"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\F\\F_0001.wav",
+    "label": "F",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:28:32.460530"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\F\\F_0002.wav",
+    "label": "F",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:28:34.534141"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\F\\F_0003.wav",
+    "label": "F",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:28:36.657924"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\F\\F_0004.wav",
+    "label": "F",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:28:39.566586"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\F\\F_0005.wav",
+    "label": "F",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:28:41.594748"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\F\\F_0006.wav",
+    "label": "F",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:28:43.599824"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\F\\F_0007.wav",
+    "label": "F",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:28:45.455672"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\F\\F_0008.wav",
+    "label": "F",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:28:47.424142"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\F\\F_0009.wav",
+    "label": "F",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:28:49.465016"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\F\\F_0010.wav",
+    "label": "F",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:28:51.469862"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\G\\G_0001.wav",
+    "label": "G",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:28:53.650528"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\G\\G_0002.wav",
+    "label": "G",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:28:55.843961"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\G\\G_0003.wav",
+    "label": "G",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:28:57.872568"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\G\\G_0004.wav",
+    "label": "G",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:28:59.910325"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\G\\G_0005.wav",
+    "label": "G",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:29:01.984245"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\G\\G_0006.wav",
+    "label": "G",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:29:04.055784"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\G\\G_0007.wav",
+    "label": "G",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:29:06.118456"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\G\\G_0008.wav",
+    "label": "G",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:29:08.103620"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\G\\G_0009.wav",
+    "label": "G",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:29:10.122351"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\G\\G_0010.wav",
+    "label": "G",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:29:12.070402"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\H\\H_0001.wav",
+    "label": "H",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:29:14.162882"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\H\\H_0002.wav",
+    "label": "H",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:29:16.142065"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\H\\H_0003.wav",
+    "label": "H",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:29:18.132501"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\H\\H_0004.wav",
+    "label": "H",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:29:19.966379"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\H\\H_0005.wav",
+    "label": "H",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:29:21.934793"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\H\\H_0006.wav",
+    "label": "H",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:29:23.801354"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\H\\H_0007.wav",
+    "label": "H",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:29:25.606656"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\H\\H_0008.wav",
+    "label": "H",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:29:27.444662"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\H\\H_0009.wav",
+    "label": "H",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:29:29.378589"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\H\\H_0010.wav",
+    "label": "H",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:29:31.196506"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\I\\I_0001.wav",
+    "label": "I",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:29:33.265557"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\I\\I_0002.wav",
+    "label": "I",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:29:35.097569"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\I\\I_0003.wav",
+    "label": "I",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:29:36.827894"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\I\\I_0004.wav",
+    "label": "I",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:29:38.798595"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\I\\I_0005.wav",
+    "label": "I",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:29:40.663174"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\I\\I_0006.wav",
+    "label": "I",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:29:42.542472"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\I\\I_0007.wav",
+    "label": "I",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:29:44.442657"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\I\\I_0008.wav",
+    "label": "I",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:29:46.310517"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\I\\I_0009.wav",
+    "label": "I",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:29:48.168556"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\I\\I_0010.wav",
+    "label": "I",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:29:50.001365"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\J\\J_0001.wav",
+    "label": "J",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:29:52.044608"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\J\\J_0002.wav",
+    "label": "J",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:29:53.964236"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\J\\J_0003.wav",
+    "label": "J",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:29:56.005899"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\J\\J_0004.wav",
+    "label": "J",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:29:58.998022"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\J\\J_0005.wav",
+    "label": "J",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:30:01.034711"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\J\\J_0006.wav",
+    "label": "J",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:30:02.873148"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\J\\J_0007.wav",
+    "label": "J",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:30:04.725660"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\J\\J_0008.wav",
+    "label": "J",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:30:06.530628"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\J\\J_0009.wav",
+    "label": "J",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:30:08.428598"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\J\\J_0010.wav",
+    "label": "J",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:30:10.332163"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\K\\K_0001.wav",
+    "label": "K",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:30:12.441409"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\K\\K_0002.wav",
+    "label": "K",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:30:14.294681"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\K\\K_0003.wav",
+    "label": "K",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:30:16.224608"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\K\\K_0004.wav",
+    "label": "K",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:30:18.064779"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\K\\K_0005.wav",
+    "label": "K",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:30:20.006944"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\K\\K_0006.wav",
+    "label": "K",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:30:21.895455"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\K\\K_0007.wav",
+    "label": "K",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:30:23.830412"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\K\\K_0008.wav",
+    "label": "K",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:30:25.800541"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\K\\K_0009.wav",
+    "label": "K",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:30:27.999358"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\K\\K_0010.wav",
+    "label": "K",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:30:29.973006"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\L\\L_0001.wav",
+    "label": "L",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:30:32.397389"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\L\\L_0002.wav",
+    "label": "L",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:30:34.383659"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\L\\L_0003.wav",
+    "label": "L",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:30:36.247933"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\L\\L_0004.wav",
+    "label": "L",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:30:38.103734"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\L\\L_0005.wav",
+    "label": "L",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:30:40.146810"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\L\\L_0006.wav",
+    "label": "L",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:30:42.594242"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\L\\L_0007.wav",
+    "label": "L",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:30:44.563040"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\L\\L_0008.wav",
+    "label": "L",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:30:46.938184"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\L\\L_0009.wav",
+    "label": "L",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:30:49.033578"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\L\\L_0010.wav",
+    "label": "L",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:30:51.077128"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\M\\M_0001.wav",
+    "label": "M",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:30:53.733266"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\M\\M_0002.wav",
+    "label": "M",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:30:55.830081"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\M\\M_0003.wav",
+    "label": "M",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:30:59.338002"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\M\\M_0004.wav",
+    "label": "M",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:31:03.939797"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\M\\M_0005.wav",
+    "label": "M",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:31:06.114484"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\M\\M_0006.wav",
+    "label": "M",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:31:08.180614"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\M\\M_0007.wav",
+    "label": "M",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:31:10.307134"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\M\\M_0008.wav",
+    "label": "M",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:31:12.408357"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\M\\M_0009.wav",
+    "label": "M",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:31:14.481740"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\M\\M_0010.wav",
+    "label": "M",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:31:16.443898"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\N\\N_0001.wav",
+    "label": "N",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:31:18.555656"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\N\\N_0002.wav",
+    "label": "N",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:31:20.524697"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\N\\N_0003.wav",
+    "label": "N",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:31:22.438414"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\N\\N_0004.wav",
+    "label": "N",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:31:24.284115"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\N\\N_0005.wav",
+    "label": "N",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:31:26.207894"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\N\\N_0006.wav",
+    "label": "N",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:31:28.206716"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\N\\N_0007.wav",
+    "label": "N",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:31:30.137018"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\N\\N_0008.wav",
+    "label": "N",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:31:32.036541"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\N\\N_0009.wav",
+    "label": "N",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:31:33.971209"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\N\\N_0010.wav",
+    "label": "N",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:31:36.037102"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\O\\O_0001.wav",
+    "label": "O",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:31:38.715577"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\O\\O_0002.wav",
+    "label": "O",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:31:40.705571"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\O\\O_0003.wav",
+    "label": "O",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:31:42.743121"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\O\\O_0004.wav",
+    "label": "O",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:31:44.608872"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\O\\O_0005.wav",
+    "label": "O",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:31:46.582152"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\O\\O_0006.wav",
+    "label": "O",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:31:48.537151"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\O\\O_0007.wav",
+    "label": "O",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:31:50.437962"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\O\\O_0008.wav",
+    "label": "O",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:31:52.375741"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\O\\O_0009.wav",
+    "label": "O",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:31:54.407746"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\O\\O_0010.wav",
+    "label": "O",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:31:56.405290"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\P\\P_0001.wav",
+    "label": "P",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:31:58.408122"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\P\\P_0001.wav",
+    "label": "P",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:32:29.838739"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\P\\P_0002.wav",
+    "label": "P",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:32:31.782345"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\P\\P_0003.wav",
+    "label": "P",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:32:33.743565"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\P\\P_0004.wav",
+    "label": "P",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:32:35.696923"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\P\\P_0005.wav",
+    "label": "P",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:32:37.566081"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\P\\P_0006.wav",
+    "label": "P",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:32:39.582660"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\P\\P_0007.wav",
+    "label": "P",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:32:41.547165"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\P\\P_0008.wav",
+    "label": "P",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:32:43.474268"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\P\\P_0009.wav",
+    "label": "P",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:32:47.587850"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Q\\Q_0001.wav",
+    "label": "Q",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:32:55.848462"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Q\\Q_0002.wav",
+    "label": "Q",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:32:57.721243"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Q\\Q_0003.wav",
+    "label": "Q",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:32:59.554235"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Q\\Q_0004.wav",
+    "label": "Q",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:33:01.481296"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Q\\Q_0005.wav",
+    "label": "Q",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:33:03.384273"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Q\\Q_0006.wav",
+    "label": "Q",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:33:05.376518"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Q\\Q_0007.wav",
+    "label": "Q",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:33:07.146572"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Q\\Q_0008.wav",
+    "label": "Q",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:33:09.169554"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Q\\Q_0009.wav",
+    "label": "Q",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:33:11.042488"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Q\\Q_0010.wav",
+    "label": "Q",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:33:12.886002"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\R\\R_0001.wav",
+    "label": "R",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:33:15.262353"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\R\\R_0002.wav",
+    "label": "R",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:33:17.150230"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\R\\R_0003.wav",
+    "label": "R",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:33:19.082803"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\R\\R_0004.wav",
+    "label": "R",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:33:21.043406"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\R\\R_0005.wav",
+    "label": "R",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:33:22.920381"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\R\\R_0006.wav",
+    "label": "R",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:33:24.776515"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\R\\R_0007.wav",
+    "label": "R",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:33:26.747174"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\R\\R_0008.wav",
+    "label": "R",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:33:28.680062"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\R\\R_0009.wav",
+    "label": "R",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:33:30.643080"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\R\\R_0010.wav",
+    "label": "R",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:33:32.576397"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\S\\S_0001.wav",
+    "label": "S",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:33:34.545663"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\S\\S_0002.wav",
+    "label": "S",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:33:36.473582"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\S\\S_0003.wav",
+    "label": "S",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:33:38.376612"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\S\\S_0004.wav",
+    "label": "S",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:33:40.308369"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\S\\S_0005.wav",
+    "label": "S",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:33:42.188679"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\S\\S_0006.wav",
+    "label": "S",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:33:44.094121"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\S\\S_0007.wav",
+    "label": "S",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:33:45.886519"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\S\\S_0008.wav",
+    "label": "S",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:33:47.748622"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\S\\S_0009.wav",
+    "label": "S",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:33:49.638124"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\S\\S_0010.wav",
+    "label": "S",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:33:51.451349"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\T\\T_0001.wav",
+    "label": "T",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:33:54.080936"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\T\\T_0002.wav",
+    "label": "T",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:33:56.051763"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\T\\T_0003.wav",
+    "label": "T",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:33:57.885522"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\T\\T_0004.wav",
+    "label": "T",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:33:59.859847"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\T\\T_0005.wav",
+    "label": "T",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:34:01.795458"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\T\\T_0006.wav",
+    "label": "T",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:34:03.730096"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\T\\T_0007.wav",
+    "label": "T",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:34:05.700651"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\T\\T_0008.wav",
+    "label": "T",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:34:07.547338"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\T\\T_0009.wav",
+    "label": "T",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:34:09.374354"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\T\\T_0010.wav",
+    "label": "T",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:34:11.234574"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\U\\U_0001.wav",
+    "label": "U",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:34:13.469455"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\U\\U_0002.wav",
+    "label": "U",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:34:16.390107"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\U\\U_0003.wav",
+    "label": "U",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:34:18.645548"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\U\\U_0004.wav",
+    "label": "U",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:34:20.728662"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\U\\U_0005.wav",
+    "label": "U",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:34:23.021106"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\U\\U_0006.wav",
+    "label": "U",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:34:25.092141"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\U\\U_0007.wav",
+    "label": "U",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:34:27.116598"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\U\\U_0008.wav",
+    "label": "U",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:34:29.128352"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\U\\U_0009.wav",
+    "label": "U",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:34:31.196987"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\U\\U_0010.wav",
+    "label": "U",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:34:33.189116"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\V\\V_0001.wav",
+    "label": "V",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:34:35.217657"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\V\\V_0002.wav",
+    "label": "V",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:34:37.285530"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\V\\V_0003.wav",
+    "label": "V",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:34:39.982466"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\V\\V_0004.wav",
+    "label": "V",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:34:42.079974"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\V\\V_0005.wav",
+    "label": "V",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:34:44.079555"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\V\\V_0006.wav",
+    "label": "V",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:34:46.010235"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\V\\V_0007.wav",
+    "label": "V",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:34:47.952115"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\V\\V_0008.wav",
+    "label": "V",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:34:49.863108"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\V\\V_0009.wav",
+    "label": "V",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:34:51.756522"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\V\\V_0010.wav",
+    "label": "V",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:34:54.118471"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\W\\W_0001.wav",
+    "label": "W",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:34:56.488512"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\W\\W_0002.wav",
+    "label": "W",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:34:58.548377"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\W\\W_0003.wav",
+    "label": "W",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:35:00.379450"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\W\\W_0004.wav",
+    "label": "W",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:35:02.373234"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\W\\W_0005.wav",
+    "label": "W",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:35:04.357587"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\W\\W_0006.wav",
+    "label": "W",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:35:06.351227"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\W\\W_0007.wav",
+    "label": "W",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:35:08.281774"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\W\\W_0008.wav",
+    "label": "W",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:35:10.220908"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\W\\W_0009.wav",
+    "label": "W",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:35:12.156870"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\W\\W_0010.wav",
+    "label": "W",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:35:14.544666"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\X\\X_0001.wav",
+    "label": "X",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:35:16.659871"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\X\\X_0002.wav",
+    "label": "X",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:35:18.692082"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\X\\X_0003.wav",
+    "label": "X",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:35:21.650445"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\X\\X_0004.wav",
+    "label": "X",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:35:23.717946"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\X\\X_0005.wav",
+    "label": "X",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:35:28.331602"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\X\\X_0006.wav",
+    "label": "X",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:35:31.154304"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\X\\X_0007.wav",
+    "label": "X",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:35:33.153889"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\X\\X_0008.wav",
+    "label": "X",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:35:35.116509"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\X\\X_0009.wav",
+    "label": "X",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:35:36.985515"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\X\\X_0010.wav",
+    "label": "X",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:35:38.946700"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Y\\Y_0001.wav",
+    "label": "Y",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:35:46.464092"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Y\\Y_0002.wav",
+    "label": "Y",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:35:48.388880"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Y\\Y_0003.wav",
+    "label": "Y",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:35:50.697879"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Y\\Y_0004.wav",
+    "label": "Y",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:35:52.781427"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Y\\Y_0005.wav",
+    "label": "Y",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:35:54.915378"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Y\\Y_0006.wav",
+    "label": "Y",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:35:57.012057"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Y\\Y_0007.wav",
+    "label": "Y",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:35:59.222524"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Y\\Y_0008.wav",
+    "label": "Y",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:36:01.287844"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Y\\Y_0009.wav",
+    "label": "Y",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:36:03.679535"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Y\\Y_0010.wav",
+    "label": "Y",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:36:05.565436"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Z\\Z_0001.wav",
+    "label": "Z",
+    "speaker": "LJQ",
+    "repetition": 1,
+    "timestamp": "2026-06-16T19:36:08.057487"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Z\\Z_0002.wav",
+    "label": "Z",
+    "speaker": "LJQ",
+    "repetition": 2,
+    "timestamp": "2026-06-16T19:36:10.293870"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Z\\Z_0003.wav",
+    "label": "Z",
+    "speaker": "LJQ",
+    "repetition": 3,
+    "timestamp": "2026-06-16T19:36:12.422773"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Z\\Z_0004.wav",
+    "label": "Z",
+    "speaker": "LJQ",
+    "repetition": 4,
+    "timestamp": "2026-06-16T19:36:14.351732"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Z\\Z_0005.wav",
+    "label": "Z",
+    "speaker": "LJQ",
+    "repetition": 5,
+    "timestamp": "2026-06-16T19:36:16.735667"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Z\\Z_0006.wav",
+    "label": "Z",
+    "speaker": "LJQ",
+    "repetition": 6,
+    "timestamp": "2026-06-16T19:36:18.958527"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Z\\Z_0007.wav",
+    "label": "Z",
+    "speaker": "LJQ",
+    "repetition": 7,
+    "timestamp": "2026-06-16T19:36:21.120695"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Z\\Z_0008.wav",
+    "label": "Z",
+    "speaker": "LJQ",
+    "repetition": 8,
+    "timestamp": "2026-06-16T19:36:23.182897"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Z\\Z_0009.wav",
+    "label": "Z",
+    "speaker": "LJQ",
+    "repetition": 9,
+    "timestamp": "2026-06-16T19:36:25.456768"
+  },
+  {
+    "audio_path": "D:\\Code\\SpeakEasy-English-Pronunciation-Training-Scoring\\data\\raw\\letters\\LJQ\\Z\\Z_0010.wav",
+    "label": "Z",
+    "speaker": "LJQ",
+    "repetition": 10,
+    "timestamp": "2026-06-16T19:36:27.387079"
+  }
+]

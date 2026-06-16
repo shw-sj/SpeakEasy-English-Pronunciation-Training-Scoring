@@ -160,8 +160,7 @@ def prepare_dataset(
     """Full pipeline for one dataset type ('letters' or 'words')."""
     root = LETTERS_DIR if dataset_type == "letters" else WORDS_DIR
     if not root.exists():
-        print(f"[WARN] {root} does not exist, skipping.")
-        return {}
+        Path(root).mkdir(parents=True, exist_ok=True)
 
     records = scan_audio_files(root)
     if not records:
@@ -325,7 +324,7 @@ def main() -> None:
     parser.add_argument("--export-sequences", action="store_true",
                         help="Also export per-frame MFCC sequences (.npz) for sequential model training")
     parser.add_argument(
-        "--import-public", choices=["fsdd", "speech_commands", "all"],
+        "--import-public", choices=["fsdd", "speech_commands", "all"], default="all",
         help="Import public datasets before processing",
     )
     args = parser.parse_args()

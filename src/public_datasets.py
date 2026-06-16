@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import shutil
-import tarfile
 import urllib.request
 import zipfile
 from pathlib import Path
-
-from config import LETTERS_DIR, SAMPLE_RATE, WORDS_DIR
+from torchaudio.datasets import SPEECHCOMMANDS
+from config import SAMPLE_RATE, WORDS_DIR
 from audio_preprocess import load_audio, save_audio
 
 FSDD_URL = "https://github.com/Jakobovski/free-spoken-digit-dataset/archive/refs/heads/master.zip"
@@ -18,8 +17,11 @@ def _download(url: str, dest: Path) -> Path:
     dest.parent.mkdir(parents=True, exist_ok=True)
     if dest.exists():
         return dest
-    print(f"Downloading {url} …")
-    urllib.request.urlretrieve(url, dest)
+
+    tmp_dest = dest.with_suffix(dest.suffix + ".tmp")
+    print(f"Downloading {url} -> {dest}")
+    urllib.request.urlretrieve(url, tmp_dest)
+    tmp_dest.replace(dest)
     return dest
 
 
@@ -63,8 +65,9 @@ def import_fsdd(output_dir: Path = WORDS_DIR, speaker: str = "fsdd") -> list[dic
 
         dest = output_dir / fsdd_speaker / label / wav.name
         dest.parent.mkdir(parents=True, exist_ok=True)
-        audio, sr = load_audio(str(wav))
-        save_audio(str(dest), audio, SAMPLE_RATE)
+        if not dest.exists():
+            audio, sr = load_audio(str(wav))
+            save_audio(str(dest), audio, SAMPLE_RATE)
 
         records.append({
             "audio_path": str(dest),
@@ -83,48 +86,49 @@ def import_speech_commands(
     max_per_word: int = 50,
 ) -> list[dict]:
     """
-    Import selected words from Google Speech Commands v0.02.
-    Requires manual download from:
-    http://download.tensorflow.org/data/speech_commands_v0.02.tar.gz
-    Place the extracted folder at data/_cache/speech_commands/
+    Download and import selected words from Google Speech Commands v0.02 via torchaudio.
+
+    Torchaudio caches the dataset under data/_cache/ and handles download/extraction.
     """
-    cache = output_dir.parent / "_cache" / "speech_commands"
-    if not cache.exists():
-        print(
-            "[INFO] Speech Commands not found. Download and extract to:\n"
-            f"  {cache}\n"
-            "  URL: http://download.tensorflow.org/data/speech_commands_v0.02.tar.gz"
-        )
-        return []
 
     target_words = target_words or [
         "yes", "no", "up", "down", "left", "right", "on", "off",
         "stop", "go", "cat", "dog", "bird", "happy", "wow",
     ]
     target_set = set(target_words)
+    imported_per_word = {word: 0 for word in target_words}
+
+    cache_root = output_dir.parent / "_cache"
+    speech_commands_dir = cache_root / "SpeechCommands" / "speech_commands_v0.02"
+    if speech_commands_dir.exists() and not any(speech_commands_dir.glob("*/*.wav")):
+        shutil.rmtree(speech_commands_dir)
+
+    dataset = SPEECHCOMMANDS(root=str(cache_root), download=True)
 
     records = []
-    for word_dir in sorted(cache.iterdir()):
-        if not word_dir.is_dir() or word_dir.name.startswith("_"):
+    for i in range(len(dataset)):
+        relpath, sr, label, speaker, utterance_number = dataset.get_metadata(i)
+        if label not in target_set:
             continue
-        if word_dir.name not in target_set:
+        if imported_per_word[label] >= max_per_word:
             continue
 
-        for i, wav in enumerate(sorted(word_dir.glob("*.wav"))):
-            if i >= max_per_word:
-                break
-            # Filename encodes speaker hash: speaker_hash_n.wav
-            speaker = wav.stem.rsplit("_", 2)[0]
-            dest = output_dir / speaker / word_dir.name / wav.name
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            if not dest.exists():
-                shutil.copy2(wav, dest)
-            records.append({
-                "audio_path": str(dest),
-                "label": word_dir.name,
-                "speaker": speaker,
-                "source": "speech_commands",
-            })
+        src = Path(dataset._archive) / relpath
+        dest = output_dir / speaker / label / f"{speaker}_{utterance_number}.wav"
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        if not dest.exists():
+            shutil.copy2(src, dest)
+
+        records.append({
+            "audio_path": str(dest),
+            "label": label,
+            "speaker": speaker,
+            "source": "speech_commands",
+        })
+        imported_per_word[label] += 1
+
+        if all(count >= max_per_word for count in imported_per_word.values()):
+            break
 
     print(f"Imported {len(records)} Speech Commands recordings")
     return records

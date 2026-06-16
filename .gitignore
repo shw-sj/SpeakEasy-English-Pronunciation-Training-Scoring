@@ -11,8 +11,10 @@ data/raw/
 data/processed/
 data/features/
 data/_cache/
+data/manifests/
 *.pkl
 *.npy
+*.npz
 
 # Claude
 .claude/
@@ -26,3 +28,4 @@ data/_cache/
 .DS_Store
 Thumbs.db
 models/
+*.tar.gz

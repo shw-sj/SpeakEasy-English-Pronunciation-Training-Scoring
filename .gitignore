@@ -25,5 +25,7 @@ data/features/
 # OS
 .DS_Store
 Thumbs.db
+#youdao cache
+data/templates/gui_standard
 
 AGENTS.md

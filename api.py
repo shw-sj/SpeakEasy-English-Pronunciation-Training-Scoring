@@ -20,18 +20,221 @@ import requests
 import numpy as np
 
 # ============================================================
-# 第一部分：Free Dictionary API —— 单词查询
+# 第一部分：Free Dictionary API —— 单词查询 + 中文释义
 # ============================================================
+
+# 内置常用词中文词典
+_CN_DICT = {
+    "hello": "你好；打招呼用语",
+    "world": "世界；地球",
+    "apple": "苹果；苹果公司",
+    "beautiful": "美丽的；漂亮的",
+    "different": "不同的；有差异的",
+    "important": "重要的；有重大影响的",
+    "student": "学生；学习者",
+    "teacher": "教师；老师",
+    "family": "家庭；家族",
+    "friend": "朋友；友人",
+    "music": "音乐；乐曲",
+    "computer": "计算机；电脑",
+    "language": "语言；语言文字",
+    "breakfast": "早餐；早饭",
+    "adventure": "冒险；奇遇",
+    "chocolate": "巧克力；巧克力糖",
+    "elephant": "大象",
+    "guitar": "吉他；六弦琴",
+    "hospital": "医院",
+    "kitchen": "厨房",
+    "library": "图书馆；藏书室",
+    "mountain": "山；山脉",
+    "ocean": "海洋；大洋",
+    "piano": "钢琴",
+    "rainbow": "彩虹",
+    "sunshine": "阳光；日光",
+    "telephone": "电话；电话机",
+    "umbrella": "雨伞；保护伞",
+    "village": "村庄；乡村",
+    "weather": "天气；气象",
+    "yesterday": "昨天",
+    "animal": "动物；兽",
+    "basketball": "篮球；篮球运动",
+    "camera": "照相机；摄影机",
+    "diamond": "钻石；金刚石",
+    "english": "英语；英文",
+    "flower": "花；花卉",
+    "garden": "花园；菜园",
+    "holiday": "假日；节日",
+    "internet": "互联网；因特网",
+    "journey": "旅行；旅程",
+    "knowledge": "知识；学识",
+    "morning": "早晨；上午",
+    "notebook": "笔记本；笔记本电脑",
+    "orange": "橙子；橙色",
+    "picture": "图片；照片",
+    "question": "问题；疑问",
+    "restaurant": "餐厅；饭店",
+    "sandwich": "三明治",
+    "tomorrow": "明天",
+    "university": "大学；综合性大学",
+    "vacation": "假期；休假",
+    "window": "窗户；窗口",
+    "afternoon": "下午；午后",
+    "birthday": "生日；诞辰",
+    "dictionary": "词典；字典",
+    "exercise": "练习；锻炼",
+    "favorite": "最喜欢的；特别喜爱的",
+    "goodbye": "再见",
+    "homework": "家庭作业",
+    "island": "岛屿",
+    "jacket": "夹克；短上衣",
+    "cat": "猫",
+    "dog": "狗",
+    "book": "书；书籍",
+    "egg": "鸡蛋；蛋",
+    "fish": "鱼；鱼类",
+    "goat": "山羊",
+    "hat": "帽子",
+    "ice": "冰；冰块",
+    "jam": "果酱",
+    "key": "钥匙；关键",
+    "lion": "狮子",
+    "map": "地图",
+    "net": "网；网络",
+    "owl": "猫头鹰",
+    "pen": "钢笔；笔",
+    "queen": "女王；王后",
+    "rat": "老鼠；大鼠",
+    "sun": "太阳；阳光",
+    "tree": "树；树木",
+    "water": "水；水域",
+    "time": "时间；时代",
+    "love": "爱；热爱",
+    "happy": "快乐的；幸福的",
+    "sad": "悲伤的；难过的",
+    "big": "大的；重要的",
+    "small": "小的；微小的",
+    "good": "好的；优良的",
+    "bad": "坏的；不好的",
+    "new": "新的；新鲜的",
+    "old": "老的；旧的",
+    "hot": "热的；辣的",
+    "cold": "冷的；寒冷的",
+    "fast": "快的；迅速的",
+    "slow": "慢的；缓慢的",
+    "easy": "容易的；简单的",
+    "difficult": "困难的；艰难的",
+    "happy": "快乐的；幸福的",
+    "angry": "生气的；愤怒的",
+    "tired": "疲劳的；累的",
+    "hungry": "饥饿的",
+    "thirsty": "口渴的",
+    "color": "颜色；色彩",
+    "number": "数字；号码",
+    "people": "人们；人民",
+    "country": "国家；乡村",
+    "city": "城市；都市",
+    "school": "学校；学院",
+    "doctor": "医生；博士",
+    "police": "警察；警方",
+    "money": "钱；货币",
+    "market": "市场；集市",
+    "airport": "机场；航空站",
+    "hotel": "酒店；旅馆",
+    "movie": "电影；影片",
+    "party": "聚会；政党",
+    "game": "游戏；比赛",
+    "sport": "运动；体育",
+    "science": "科学；自然科学",
+    "history": "历史；历史学",
+    "art": "艺术；美术",
+    "peace": "和平；安宁",
+    "war": "战争；斗争",
+    "dream": "梦；梦想",
+    "success": "成功；成就",
+    "problem": "问题；难题",
+    "answer": "答案；回答",
+    "help": "帮助；援助",
+    "work": "工作；劳动",
+    "play": "玩；玩耍",
+    "read": "阅读；朗读",
+    "write": "写；写作",
+    "speak": "说话；讲话",
+    "listen": "听；倾听",
+    "think": "思考；认为",
+    "learn": "学习；学会",
+    "teach": "教；教导",
+    "run": "跑；运行",
+    "walk": "走；步行",
+    "eat": "吃；吃饭",
+    "drink": "喝；饮",
+    "sleep": "睡觉；睡眠",
+    "sing": "唱歌；演唱",
+    "dance": "跳舞；舞蹈",
+    "swim": "游泳",
+    "fly": "飞；飞行",
+    "drive": "驾驶；开车",
+    "buy": "买；购买",
+    "sell": "卖；出售",
+    "open": "打开；开放的",
+    "close": "关闭；接近的",
+    "begin": "开始；着手",
+    "finish": "完成；结束",
+    "remember": "记住；记得",
+    "forget": "忘记；遗忘",
+    "understand": "理解；明白",
+    "believe": "相信；认为",
+    "hope": "希望；期望",
+    "wish": "希望；祝愿",
+    "thank": "感谢；谢谢",
+    "sorry": "抱歉的；遗憾的",
+    "please": "请；使高兴",
+    "welcome": "欢迎；受欢迎的",
+    "together": "一起；共同",
+}
+
+
+def _translate_to_chinese(text: str) -> str:
+    """使用 MyMemory 免费翻译 API 将英文翻译为中文"""
+    try:
+        url = "https://api.mymemory.translated.net/get"
+        resp = requests.get(url, params={"q": text, "langpair": "en|zh-CN"}, timeout=8)
+        if resp.status_code == 200:
+            data = resp.json()
+            translated = data.get("responseData", {}).get("translatedText", "")
+            if translated and translated != text:
+                return translated
+    except Exception:
+        pass
+    return ""
+
+
+def _get_chinese_meaning(word: str, definitions: list) -> str:
+    """获取单词的中文释义，优先本地词典，其次在线翻译"""
+    word_lower = word.lower()
+    # 1. 优先本地词典
+    if word_lower in _CN_DICT:
+        return _CN_DICT[word_lower]
+    # 2. 在线翻译英文释义（只翻译取第一条）
+    if definitions:
+        first_def = definitions[0]
+        # 去掉词性前缀 "noun: " → "definition"
+        if ": " in first_def:
+            first_def = first_def.split(": ", 1)[1]
+        translated = _translate_to_chinese(first_def)
+        if translated:
+            return translated
+    return "暂无中文释义"
+
 
 def get_word_info(word):
     """
-    调用 Free Dictionary API 获取单词的释义、音标和发音音频链接
+    查询单词的英文音标、中文释义和发音音频链接
 
     参数:
         word (str): 要查询的英文单词
 
     返回:
-        dict: 包含音标、释义、音频链接等信息的字典，失败时返回 None
+        dict: 包含音标、中文释义、英文释义、音频链接等信息的字典，失败时返回 None
     """
     url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
 
@@ -64,11 +267,15 @@ def get_word_info(word):
                 if first_def:
                     definitions.append(f"{part_of_speech}: {first_def}")
 
+            # 获取中文释义
+            cn_meaning = _get_chinese_meaning(word, definitions)
+
             return {
                 'word': word,
                 'phonetic': phonetic_text or 'N/A',
                 'audio_url': audio_url or 'N/A',
-                'definitions': definitions,
+                'definitions': definitions,      # 英文释义
+                'definitions_cn': cn_meaning,    # 中文释义
             }
         else:
             return None

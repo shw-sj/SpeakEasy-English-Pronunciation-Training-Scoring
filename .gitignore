@@ -22,6 +22,9 @@ data/features/
 .vscode/
 *.swp
 
+成员A.docx
+成员C_实验报告_v3.docx
+
 # OS
 .DS_Store
 Thumbs.db

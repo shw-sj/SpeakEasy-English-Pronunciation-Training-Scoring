@@ -250,9 +250,9 @@ class ModelManager:
 
     def checkpoint_path(self, model_name: str, dataset: str) -> Path:
         if model_name == "BP":
-            return ROOT / "results" / f"bp_{dataset}_model.pth"
+            return ROOT / "results" / f"bp_{dataset}_best_acc.pth"
         if model_name == "CNN":
-            return ROOT / "results" / f"best_cnn_{dataset}_model.pth"
+            return ROOT / "results" / f"best_cnn_{dataset}_best_acc.pth"
         raise ValueError(model_name)
 
     def load(self, model_name: str, dataset: str):
@@ -270,11 +270,14 @@ class ModelManager:
         input_dim = int(data["input_dim"])
         if model_name == "BP":
             model = BPNetwork(input_size=input_dim, output_size=output_dim,
-                              dropout_rate=float(data.get("dropout_rate", 0.0)),
-                              task=str(data.get("task", dataset))).to(self.device)
+                              dropout_rate=float(data.get("dropout_rate", 0.0))).to(self.device)
         else:
-            model = CNN1D(input_dim=input_dim, num_classes=output_dim,
-                          dropout_rate=float(data.get("dropout_rate", 0.3))).to(self.device)
+            model = CNN1D(
+                input_dim=input_dim, num_classes=output_dim,
+                dropout_rate=float(data.get("dropout_rate", 0.3)),
+                channels=tuple(data.get("channels", (32, 64, 128, 256))),
+                freq_groups=data.get("freq_groups", None),
+            ).to(self.device)
         model.load_state_dict(data["state_dict"])
         model.eval()
         loaded = (model, labels, mean, std)

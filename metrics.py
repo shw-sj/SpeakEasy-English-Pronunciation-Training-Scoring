@@ -28,7 +28,7 @@ from scipy.stats import pearsonr
 # 第一部分：分类评价指标
 # ====================================================================
 class ClassificationMetrics:
-    """多分类评价指标（字母26类 / 单词N类）"""
+    """多分类评价指标（字母26类）"""
 
     def __init__(self, num_classes, class_names=None):
         self.num_classes = num_classes

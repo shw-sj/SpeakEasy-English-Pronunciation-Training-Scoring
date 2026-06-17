@@ -28,10 +28,8 @@ from config import (
     TEST_RATIO,
     TRAIN_RATIO,
     VAL_RATIO,
-    WORDS_DIR,
 )
 from data_augmentation import augment_all
-from public_datasets import import_fsdd, import_speech_commands
 
 
 def scan_audio_files(root: Path) -> list[dict]:
@@ -59,56 +57,77 @@ def speaker_independent_split(
     val_ratio: float = VAL_RATIO,
     test_ratio: float = TEST_RATIO,
     seed: int = RANDOM_SEED,
+    train_speakers: list[str] | None = None,
 ) -> dict[str, list[dict]]:
     """Split records by speaker so no speaker appears in multiple splits.
 
-    Falls back to stratified sample-level split when there is only 1 speaker,
-    because GroupShuffleSplit requires ≥2 groups to produce non-empty splits.
+    Falls back to stratified sample-level split when there is only 1 speaker.
+
+    Parameters
+    ----------
+    train_speakers : list[str] or None
+        Speakers forced into the training set (e.g. all human speakers).
     """
     assert abs(train_ratio + val_ratio + test_ratio - 1.0) < 1e-6
 
-    speakers = sorted({r["speaker"] for r in records})
+    train_speakers = train_speakers or []
 
-    # ── Fallback: single speaker → split by samples (stratified) ──
-    if len(speakers) < 2:
-        print(f"  [INFO] Only {len(speakers)} speaker(s), using sample-level "
-              f"stratified split instead of speaker-independent split.")
-        labels = [r["label"] for r in records]
+    # ── Force specified speakers into training ──
+    forced_train = [r for r in records if r["speaker"] in train_speakers]
+    remaining = [r for r in records if r["speaker"] not in train_speakers]
 
-        # 60% train, 40% rest
+    if forced_train:
+        print(f"  [SPLIT] Forced into train: {sorted(set(train_speakers))}")
+
+    if not remaining:
+        # All speakers in train → stratified sample-level split
+        labels = [r["label"] for r in forced_train]
         train, rest, _, rest_labels = train_test_split(
-            records, labels,
-            test_size=1 - train_ratio,
-            random_state=seed,
-            stratify=labels,
+            forced_train, labels,
+            test_size=val_ratio + test_ratio,
+            random_state=seed, stratify=labels,
         )
-        # From the 40% rest: half val, half test (i.e. 20% / 20%)
-        val_fraction = val_ratio / (val_ratio + test_ratio)  # 0.2 / 0.4 = 0.5
         val, test = train_test_split(
-            rest,
-            test_size=1 - val_fraction,
-            random_state=seed,
-            stratify=rest_labels,
+            rest, test_size=test_ratio / (val_ratio + test_ratio),
+            random_state=seed, stratify=rest_labels,
         )
         return {"train": train, "val": val, "test": test}
 
-    # ── Multi-speaker: GroupShuffleSplit ──
-    groups = np.array([r["speaker"] for r in records])
+    speakers = sorted({r["speaker"] for r in remaining})
 
+    if len(speakers) < 2:
+        # Only 1 remaining speaker → split remaining by samples, then merge
+        rem_labels = [r["label"] for r in remaining]
+        rem_train, rem_rest, _, rem_rest_labels = train_test_split(
+            remaining, rem_labels,
+            test_size=val_ratio + test_ratio,
+            random_state=seed, stratify=rem_labels,
+        )
+        rem_val, rem_test = train_test_split(
+            rem_rest,
+            test_size=test_ratio / (val_ratio + test_ratio),
+            random_state=seed, stratify=rem_rest_labels,
+        )
+        return {
+            "train": forced_train + rem_train,
+            "val": rem_val,
+            "test": rem_test,
+        }
+
+    # Remaining speakers ≥2 → GroupShuffleSplit
+    rem_groups = np.array([r["speaker"] for r in remaining])
     gss1 = GroupShuffleSplit(n_splits=1, test_size=1 - train_ratio, random_state=seed)
-    train_idx, rest_idx = next(gss1.split(records, groups=groups))
-
-    rest_records = [records[i] for i in rest_idx]
-    rest_groups = groups[rest_idx]
+    train_idx, rest_idx = next(gss1.split(remaining, groups=rem_groups))
+    rem_train = [remaining[i] for i in train_idx]
+    rem_rest = [remaining[i] for i in rest_idx]
+    rem_rest_groups = rem_groups[rest_idx]
     val_fraction = val_ratio / (val_ratio + test_ratio)
-
     gss2 = GroupShuffleSplit(n_splits=1, test_size=1 - val_fraction, random_state=seed)
-    val_idx, test_idx = next(gss2.split(rest_records, groups=rest_groups))
-
+    val_idx, test_idx = next(gss2.split(rem_rest, groups=rem_rest_groups))
     return {
-        "train": [records[i] for i in train_idx],
-        "val": [rest_records[i] for i in val_idx],
-        "test": [rest_records[i] for i in test_idx],
+        "train": forced_train + rem_train,
+        "val": [rem_rest[i] for i in val_idx],
+        "test": [rem_rest[i] for i in test_idx],
     }
 
 
@@ -153,12 +172,12 @@ def process_record(
 
 
 def prepare_dataset(
-    dataset_type: str = "letters",
     augment: bool = True,
     augment_factor: int = AUGMENT_FACTOR,
+    train_speakers: list[str] | None = None,
 ) -> dict[str, list[dict]]:
-    """Full pipeline for one dataset type ('letters' or 'words')."""
-    root = LETTERS_DIR if dataset_type == "letters" else WORDS_DIR
+    """Full pipeline for the letter dataset."""
+    root = LETTERS_DIR
     if not root.exists():
         Path(root).mkdir(parents=True, exist_ok=True)
 
@@ -167,10 +186,10 @@ def prepare_dataset(
         print(f"[WARN] No audio files found in {root}")
         return {}
 
-    print(f"Found {len(records)} files in {dataset_type} dataset")
-    splits = speaker_independent_split(records)
+    print(f"Found {len(records)} files in letters dataset")
+    splits = speaker_independent_split(records, train_speakers=train_speakers)
 
-    processed_dir = PROCESSED_DIR / dataset_type
+    processed_dir = PROCESSED_DIR / "letters"
     all_processed: dict[str, list[dict]] = {}
 
     for split_name, split_records in splits.items():
@@ -188,7 +207,6 @@ def prepare_dataset(
 def export_features(
     splits: dict[str, list[dict]],
     output_dir: Path,
-    dataset_type: str,
     export_sequences: bool = False,
 ) -> None:
     """Export features as .npy arrays and a manifest .csv.
@@ -206,10 +224,10 @@ def export_features(
         labels = [r["label"] for r in records]
         paths = [r.get("processed_path", r["audio_path"]) for r in records]
 
-        npy_path = output_dir / f"{dataset_type}_{split_name}_features.npy"
+        npy_path = output_dir / f"letters_{split_name}_features.npy"
         np.save(npy_path, features)
 
-        csv_path = output_dir / f"{dataset_type}_{split_name}_manifest.csv"
+        csv_path = output_dir / f"letters_{split_name}_manifest.csv"
         df = pd.DataFrame({
             "audio_path": paths,
             "label": labels,
@@ -222,13 +240,12 @@ def export_features(
 
     if export_sequences:
         print("\n--- Exporting frame-level MFCC sequences ---")
-        export_frame_sequences(splits, output_dir, dataset_type)
+        export_frame_sequences(splits, output_dir)
 
 
 def export_frame_sequences(
     splits: dict[str, list[dict]],
     output_dir: Path,
-    dataset_type: str,
 ) -> None:
     """
     Export per-frame MFCC sequences as .npz archives for sequential model training.
@@ -254,7 +271,6 @@ def export_frame_sequences(
             proc_path = r.get("processed_path", r["audio_path"])
             try:
                 audio, sr = load_audio(proc_path)
-                # audio was already preprocessed → skip redundant VAD/norm
                 seq = extract_mfcc_sequence(
                     audio, sr, preprocess=False, max_frames=None,
                 )  # (T, 39) variable length
@@ -271,17 +287,14 @@ def export_frame_sequences(
             print(f"  [WARN] No valid sequences for {split_name}")
             continue
 
-        # Save as compressed archive — one key per sample
-        npz_path = output_dir / f"{dataset_type}_{split_name}_sequences.npz"
+        npz_path = output_dir / f"letters_{split_name}_sequences.npz"
         arrays = {f"seq_{i:06d}": seq for i, seq in enumerate(sequences)}
         np.savez_compressed(npz_path, **arrays)
 
-        # Save frame-count metadata for fast lookup
-        meta_path = output_dir / f"{dataset_type}_{split_name}_seq_meta.npy"
+        meta_path = output_dir / f"letters_{split_name}_seq_meta.npy"
         np.save(meta_path, np.array(frame_counts, dtype=np.int32))
 
-        # Save companion manifest (same columns as the aggregated one)
-        csv_path = output_dir / f"{dataset_type}_{split_name}_seq_manifest.csv"
+        csv_path = output_dir / f"letters_{split_name}_seq_manifest.csv"
         pd.DataFrame({
             "audio_path": paths,
             "label": labels,
@@ -298,7 +311,6 @@ def export_frame_sequences(
 
 def save_split_manifest(
     splits: dict[str, list[dict]],
-    dataset_type: str,
 ) -> None:
     """Save split metadata as JSON."""
     MANIFESTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -308,51 +320,36 @@ def save_split_manifest(
             {k: v for k, v in r.items() if k != "features"}
             for r in records
         ]
-    path = MANIFESTS_DIR / f"{dataset_type}_splits.json"
+    path = MANIFESTS_DIR / "letters_splits.json"
     with open(path, "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2, ensure_ascii=False)
     print(f"Split manifest → {path}")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Prepare SpeakEasy datasets")
-    parser.add_argument(
-        "--dataset", choices=["letters", "words", "both"], default="both",
-    )
+    parser = argparse.ArgumentParser(description="Prepare SpeakEasy letter dataset")
     parser.add_argument("--no-augment", action="store_true")
     parser.add_argument("--augment-factor", type=int, default=AUGMENT_FACTOR)
     parser.add_argument("--export-sequences", action="store_true",
                         help="Also export per-frame MFCC sequences (.npz) for sequential model training")
-    parser.add_argument(
-        "--import-public", choices=["fsdd", "speech_commands", "all"], default="all",
-        help="Import public datasets before processing",
-    )
     args = parser.parse_args()
 
-    if args.import_public:
-        if args.import_public in ("fsdd", "all"):
-            import_fsdd()
-        if args.import_public in ("speech_commands", "all"):
-            import_speech_commands()
-
-    datasets = (
-        ["letters", "words"] if args.dataset == "both" else [args.dataset]
-    )
+    # All human speakers forced into training set so the model learns
+    # real voices. TTS speakers are distributed via GroupShuffleSplit.
+    HUMAN_SPEAKERS = ["SWJ", "LJQ", "Lcp"]
 
     print(f"Feature vector dimension: {feature_dim()}")
 
-    for ds in datasets:
-        print(f"\n{'='*50}\nPreparing {ds} dataset\n{'='*50}")
-        splits = prepare_dataset(
-            dataset_type=ds,
-            augment=not args.no_augment,
-            augment_factor=args.augment_factor,
-        )
-        if not splits:
-            continue
-        export_features(splits, FEATURES_DIR, ds,
+    print(f"\n{'='*50}\nPreparing letters dataset\n{'='*50}")
+    splits = prepare_dataset(
+        augment=not args.no_augment,
+        augment_factor=args.augment_factor,
+        train_speakers=HUMAN_SPEAKERS,
+    )
+    if splits:
+        export_features(splits, FEATURES_DIR,
                         export_sequences=args.export_sequences)
-        save_split_manifest(splits, ds)
+        save_split_manifest(splits)
 
     print("\nDone.")
 

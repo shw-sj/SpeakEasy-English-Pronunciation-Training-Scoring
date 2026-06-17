@@ -1,3 +1,12 @@
+"""Train BPNetwork (MLP) on aggregated MFCC features for letter recognition.
+
+Improvements over baseline:
+- FocalLoss: focuses training on hard-to-classify letters (B/D, M/N, etc.)
+- CosineWarmRestarts: periodic LR resets help escape local minima
+- LR warmup: stable start avoids early runaway gradients
+- SWA (Stochastic Weight Averaging): flat-minima ensemble for better generalisation
+"""
+
 from __future__ import annotations
 
 import argparse
@@ -10,6 +19,7 @@ import pandas as pd
 import torch
 from sklearn.preprocessing import LabelEncoder
 from torch import nn
+from torch.optim.swa_utils import AveragedModel, SWALR, update_bn
 from torch.utils.data import DataLoader, TensorDataset
 
 from bp_network import BPNetwork
@@ -17,66 +27,67 @@ from bp_network import BPNetwork
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
-from audio_feature import feature_dim
+from audio_feature import feature_dim_rich
 from config import FEATURES_DIR
+from train_utils import (
+    CosineWarmRestarts,
+    FocalLoss,
+    add_gradient_noise,
+    compute_loss,
+    mixup_batch as mixup_batch_new,
+)
 
 matplotlib.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "Noto Sans SC"]
 matplotlib.rcParams["axes.unicode_minus"] = False
 
 
-INPUT_DIM = feature_dim()
+INPUT_DIM = feature_dim_rich()  # 156-dim rich features
 LR = 1e-3
-LR_DECAY = 0.95
-WEIGHT_DECAY = 1e-3
-DROPOUT_RATE = 0.3
-CLIP_GRAD = 5.0
-EPOCHS = 100
-EARLY_STOP_PATIENCE = 15
+LR_MIN = 1e-6
+WEIGHT_DECAY = 5e-3
+DROPOUT_RATE = 0.4
+CLIP_GRAD = 3.0
+EPOCHS = 150
+EARLY_STOP_PATIENCE = 30
 BATCH_SIZE = 64
 
+# ── Regularisation knobs ──
+LABEL_SMOOTHING = 0.1
+MIXUP_ALPHA = 0.3
+GRAD_NOISE_STD = 0.001
 
-def normalize(train_x: np.ndarray, val_x: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+# ── Focal Loss ──
+FOCAL_GAMMA = 2.0
+
+# ── LR schedule ──
+WARMUP_EPOCHS = 5
+COSINE_T0 = 30
+COSINE_TMULT = 2
+
+# ── SWA ──
+SWA_START = 100  # epoch to start averaging
+SWA_LR = 1e-4
+
+
+def normalize(train_x: np.ndarray, val_x: np.ndarray):
     mean = train_x.mean(axis=0)
     std = train_x.std(axis=0) + 1e-8
     return (train_x - mean) / std, (val_x - mean) / std, mean, std
 
 
-def load_dataset(dataset: str):
-    if dataset == "both":
-        train_features, val_features = [], []
-        train_labels, val_labels = [], []
-        for prefix, name in [("letter", "letters"), ("word", "words")]:
-            train_path = FEATURES_DIR / f"{name}_train_features.npy"
-            train_csv = FEATURES_DIR / f"{name}_train_manifest.csv"
-            val_path = FEATURES_DIR / f"{name}_val_features.npy"
-            val_csv = FEATURES_DIR / f"{name}_val_manifest.csv"
-            if not train_path.exists() or not val_path.exists():
-                continue
-            train_features.append(np.load(train_path).astype(np.float32))
-            val_features.append(np.load(val_path).astype(np.float32))
-            train_df = pd.read_csv(train_csv)
-            val_df = pd.read_csv(val_csv)
-            train_labels.extend(f"{prefix}:{x}" for x in train_df["label"].values)
-            val_labels.extend(f"{prefix}:{x}" for x in val_df["label"].values)
-
-        if not train_features:
-            raise FileNotFoundError("No prepared letter/word features found. Run src/prepare_data.py first.")
-
-        x_train_raw = np.concatenate(train_features, axis=0)
-        x_val_raw = np.concatenate(val_features, axis=0)
-        y_train_raw = np.array(train_labels)
-        y_val_raw = np.array(val_labels)
-    else:
-        train_path = FEATURES_DIR / f"{dataset}_train_features.npy"
-        train_csv = FEATURES_DIR / f"{dataset}_train_manifest.csv"
-        val_path = FEATURES_DIR / f"{dataset}_val_features.npy"
-        val_csv = FEATURES_DIR / f"{dataset}_val_manifest.csv"
-        if not train_path.exists() or not val_path.exists():
-            raise FileNotFoundError(f"Missing prepared features for {dataset}. Run src/prepare_data.py --dataset {dataset}")
-        x_train_raw = np.load(train_path).astype(np.float32)
-        x_val_raw = np.load(val_path).astype(np.float32)
-        y_train_raw = pd.read_csv(train_csv)["label"].values
-        y_val_raw = pd.read_csv(val_csv)["label"].values
+def load_dataset():
+    train_path = FEATURES_DIR / "letters_train_features.npy"
+    train_csv = FEATURES_DIR / "letters_train_manifest.csv"
+    val_path = FEATURES_DIR / "letters_val_features.npy"
+    val_csv = FEATURES_DIR / "letters_val_manifest.csv"
+    if not train_path.exists() or not val_path.exists():
+        raise FileNotFoundError(
+            "Missing prepared letter features. Run src/prepare_data.py first."
+        )
+    x_train_raw = np.load(train_path).astype(np.float32)
+    x_val_raw = np.load(val_path).astype(np.float32)
+    y_train_raw = pd.read_csv(train_csv)["label"].values
+    y_val_raw = pd.read_csv(val_csv)["label"].values
 
     label_encoder = LabelEncoder().fit(np.concatenate([y_train_raw, y_val_raw]))
     y_train = label_encoder.transform(y_train_raw)
@@ -96,8 +107,10 @@ def make_loader(x: np.ndarray, y: np.ndarray, batch_size: int, shuffle: bool) ->
     )
 
 
-def train_bp_network(dataset: str = "letters") -> None:
-    x_train, x_val, y_train, y_val, label_encoder, norm_mean, norm_std = load_dataset(dataset)
+# ── Training ─────────────────────────────────────────────────────────
+
+def train_bp_network() -> None:
+    x_train, x_val, y_train, y_val, label_encoder, norm_mean, norm_std = load_dataset()
     input_dim = x_train.shape[1]
     output_dim = len(label_encoder.classes_)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -106,18 +119,35 @@ def train_bp_network(dataset: str = "letters") -> None:
         input_size=input_dim,
         output_size=output_dim,
         dropout_rate=DROPOUT_RATE,
-        task=dataset,
     ).to(device)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY)
+
+    # FocalLoss: auto-focuses on confusing letter pairs
+    criterion = FocalLoss(gamma=FOCAL_GAMMA, label_smoothing=LABEL_SMOOTHING)
+    val_criterion = nn.CrossEntropyLoss()
+
+    optimizer = torch.optim.AdamW(model.parameters(), lr=LR,
+                                  weight_decay=WEIGHT_DECAY)
     train_loader = make_loader(x_train, y_train, BATCH_SIZE, shuffle=True)
     val_x = torch.as_tensor(x_val, dtype=torch.float32, device=device)
     val_y = torch.as_tensor(y_val, dtype=torch.long, device=device)
 
+    # ── LR schedule with warm restarts ──
+    lr_schedule = CosineWarmRestarts(
+        base_lr=LR, min_lr=LR_MIN,
+        T_0=COSINE_T0, T_mult=COSINE_TMULT,
+        warmup_epochs=WARMUP_EPOCHS,
+    )
+
+    # ── SWA for better generalisation ──
+    swa_model = AveragedModel(model).to(device)
+    swa_scheduler = SWALR(optimizer, swa_lr=SWA_LR,
+                          anneal_epochs=5, anneal_strategy="cos")
+
     save_dir = Path("results")
     save_dir.mkdir(exist_ok=True)
-    model_save_path = save_dir / f"bp_{dataset}_model.pth"
-    plot_save_path = save_dir / f"bp_{dataset}_curve.png"
+    model_save_path = save_dir / "bp_letters_best_acc.pth"
+    swa_save_path = save_dir / "bp_letters_swa.pth"
+    plot_save_path = save_dir / "bp_letters_curve.png"
 
     train_losses, val_losses, val_accuracies = [], [], []
     best_val_loss = float("inf")
@@ -127,13 +157,19 @@ def train_bp_network(dataset: str = "letters") -> None:
 
     print("=" * 72)
     print(
-        f"[BP] dataset={dataset} | train={x_train.shape} | val={x_val.shape} | "
+        f"[BP] train={x_train.shape} | val={x_val.shape} | "
         f"classes={output_dim} | input_dim={input_dim} | device={device}"
     )
+    print(f"[BP] FocalLoss γ={FOCAL_GAMMA} | label_smoothing={LABEL_SMOOTHING} | "
+          f"mixup_alpha={MIXUP_ALPHA}")
+    print(f"[BP] dropout={DROPOUT_RATE} | weight_decay={WEIGHT_DECAY}")
+    print(f"[BP] CosineWarmRestarts T0={COSINE_T0} Tmult={COSINE_TMULT} "
+          f"warmup={WARMUP_EPOCHS}")
+    print(f"[BP] SWA start={SWA_START} swa_lr={SWA_LR}")
     print("=" * 72)
 
     for epoch in range(1, EPOCHS + 1):
-        current_lr = LR * (LR_DECAY ** (epoch - 1))
+        current_lr = lr_schedule.get_lr(epoch)
         for group in optimizer.param_groups:
             group["lr"] = current_lr
 
@@ -143,10 +179,19 @@ def train_bp_network(dataset: str = "letters") -> None:
         for batch_x, batch_y in train_loader:
             batch_x = batch_x.to(device)
             batch_y = batch_y.to(device)
+
+            batch_x, batch_y_mixed = mixup_batch_new(
+                batch_x, batch_y, MIXUP_ALPHA, output_dim)
+
             optimizer.zero_grad(set_to_none=True)
             logits = model(batch_x)
-            loss = criterion(logits, batch_y)
+
+            loss = compute_loss(logits, batch_y_mixed, criterion)
+
             loss.backward()
+
+            add_gradient_noise(model, GRAD_NOISE_STD)
+
             nn.utils.clip_grad_norm_(model.parameters(), CLIP_GRAD)
             optimizer.step()
             total_loss += float(loss.item()) * len(batch_x)
@@ -158,16 +203,23 @@ def train_bp_network(dataset: str = "letters") -> None:
         model.eval()
         with torch.no_grad():
             val_logits = model(val_x)
-            val_loss = float(criterion(val_logits, val_y).item())
+            val_loss = float(val_criterion(val_logits, val_y).item())
             val_pred = val_logits.argmax(dim=1)
             val_acc = float((val_pred == val_y).float().mean().item())
         val_losses.append(val_loss)
         val_accuracies.append(val_acc)
 
+        # ── SWA update ──
+        if epoch >= SWA_START:
+            swa_model.update_parameters(model)
+            swa_scheduler.step()
+
         if epoch == 1 or epoch % 10 == 0:
+            swa_tag = " [SWA]" if epoch >= SWA_START else ""
             print(
                 f"[BP] Epoch {epoch:03d}/{EPOCHS} | lr={current_lr:.6f} | "
-                f"train_loss={train_loss:.4f} | val_loss={val_loss:.4f} | val_acc={val_acc:.2%}"
+                f"train_loss={train_loss:.4f} | val_loss={val_loss:.4f} | "
+                f"val_acc={val_acc:.2%}{swa_tag}"
             )
 
         if val_loss < best_val_loss:
@@ -181,7 +233,6 @@ def train_bp_network(dataset: str = "letters") -> None:
                     "input_dim": input_dim,
                     "output_dim": output_dim,
                     "dropout_rate": DROPOUT_RATE,
-                    "task": dataset,
                     "label_encoder_classes": label_encoder.classes_,
                     "norm_mean": norm_mean,
                     "norm_std": norm_std,
@@ -194,13 +245,68 @@ def train_bp_network(dataset: str = "letters") -> None:
                 print(f"[BP] Early stop: val_loss did not improve for {EARLY_STOP_PATIENCE} epochs")
                 break
 
+    # ── Finalise SWA: update BN stats, save ──
+    if epoch >= SWA_START:
+        print("[BP] Updating SWA BatchNorm statistics …")
+        update_bn(train_loader, swa_model, device=device)
+        swa_state = swa_model.state_dict()
+        torch.save(
+            {
+                "state_dict": swa_state,
+                "input_dim": input_dim,
+                "output_dim": output_dim,
+                "dropout_rate": DROPOUT_RATE,
+                "label_encoder_classes": label_encoder.classes_,
+                "norm_mean": norm_mean,
+                "norm_std": norm_std,
+            },
+            swa_save_path,
+        )
+        print(f"[BP] SWA model saved: {swa_save_path}")
+
     print(f"[BP] Best model saved: {model_save_path}")
     print(f"[BP] Best epoch={best_epoch} | best_val_loss={best_val_loss:.4f} | best_val_acc={best_val_acc:.2%}")
+
+    # ── Evaluate SWA on validation set ──
+    if epoch >= SWA_START:
+        swa_model.eval()
+        with torch.no_grad():
+            swa_logits = swa_model(val_x)
+            swa_pred = swa_logits.argmax(dim=1)
+            swa_val_acc = float((swa_pred == val_y).float().mean().item())
+        print(f"[BP] SWA validation accuracy: {swa_val_acc:.2%}")
+
+    # ── Evaluate on test set if available ──
+    test_path = FEATURES_DIR / "letters_test_features.npy"
+    test_csv = FEATURES_DIR / "letters_test_manifest.csv"
+    if test_path.exists() and test_csv.exists():
+        x_test_raw = np.load(test_path).astype(np.float32)
+        test_df = pd.read_csv(test_csv)
+        y_test_raw = test_df["label"].values
+        y_test = label_encoder.transform(y_test_raw)
+        x_test = (x_test_raw - norm_mean) / (norm_std + 1e-8)
+        test_x_t = torch.as_tensor(x_test, dtype=torch.float32, device=device)
+        test_y_t = torch.as_tensor(y_test, dtype=torch.long, device=device)
+
+        model.eval()
+        with torch.no_grad():
+            test_preds = model(test_x_t).argmax(dim=1)
+            test_acc = float((test_preds == test_y_t).float().mean().item())
+        print(f"[BP] Test accuracy: {test_acc:.2%}")
+
+        if epoch >= SWA_START:
+            swa_model.eval()
+            with torch.no_grad():
+                swa_test_preds = swa_model(test_x_t).argmax(dim=1)
+                swa_test_acc = float((swa_test_preds == test_y_t).float().mean().item())
+            print(f"[BP] SWA Test accuracy: {swa_test_acc:.2%}")
 
     plt.figure(figsize=(12, 4))
     plt.subplot(1, 2, 1)
     plt.plot(train_losses, label="train loss", color="blue")
     plt.plot(val_losses, label="val loss", color="red")
+    if SWA_START <= EPOCHS:
+        plt.axvline(x=SWA_START - 1, color="orange", linestyle="--", alpha=0.6, label="SWA start")
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.legend()
@@ -208,6 +314,8 @@ def train_bp_network(dataset: str = "letters") -> None:
 
     plt.subplot(1, 2, 2)
     plt.plot(val_accuracies, label="val accuracy", color="green")
+    if SWA_START <= EPOCHS:
+        plt.axvline(x=SWA_START - 1, color="orange", linestyle="--", alpha=0.6, label="SWA start")
     plt.xlabel("Epoch")
     plt.ylabel("Accuracy")
     plt.legend()
@@ -224,7 +332,6 @@ def load_bp_model(model_path: str | Path):
         input_size=int(data["input_dim"]),
         output_size=int(data["output_dim"]),
         dropout_rate=float(data.get("dropout_rate", 0.0)),
-        task=str(data.get("task", "letters")),
     )
     model.load_state_dict(data["state_dict"])
     model.eval()
@@ -234,7 +341,6 @@ def load_bp_model(model_path: str | Path):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Train BP neural network")
-    parser.add_argument("--dataset", choices=["letters", "words", "both"], default="letters")
+    parser = argparse.ArgumentParser(description="Train BP neural network for letter recognition")
     args = parser.parse_args()
-    train_bp_network(args.dataset)
+    train_bp_network()

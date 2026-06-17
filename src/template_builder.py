@@ -18,7 +18,6 @@ import numpy as np
 from audio_feature import extract_features
 from audio_preprocess import load_audio, save_audio
 from config import (
-    DEFAULT_WORDS,
     LETTERS_DIR,
     LETTERS,
     SAMPLE_RATE,
@@ -138,7 +137,7 @@ def build_templates(
     Generate standard pronunciation audio and extract MFCC template features.
     Returns {label: feature_vector}.
     """
-    labels = labels or (LETTERS + DEFAULT_WORDS)
+    labels = labels or LETTERS
     audio_dir = output_dir / "audio"
     templates: dict[str, np.ndarray] = {}
 
@@ -193,7 +192,7 @@ def main() -> None:
 
     parser.add_argument(
         "--labels", nargs="*", default=None,
-        help="Specific labels (default: all letters + words)",
+        help="Specific labels (default: all letters)",
     )
     parser.add_argument(
         "--format", choices=["json", "pkl", "both"], default="both",

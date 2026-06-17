@@ -110,6 +110,28 @@ def aggregate_features(mfcc: np.ndarray) -> np.ndarray:
     return np.concatenate(parts).astype(np.float32)
 
 
+def aggregate_features_rich(mfcc: np.ndarray) -> np.ndarray:
+    """
+    Aggregate frame-level MFCC + Δ + ΔΔ into a richer fixed-length vector.
+
+    Computes 4 statistics per coefficient: mean, std, min, max.
+    Total dimension: n_mfcc × 3 (static/Δ/ΔΔ) × 4 (stats) = 156 dims.
+
+    The additional min/max statistics capture extreme values that mean+std
+    alone miss — useful for distinguishing letters with different articulatory dynamics.
+    """
+    delta = compute_delta(mfcc)
+    delta2 = compute_delta(delta)
+
+    parts = []
+    for feat in (mfcc, delta, delta2):
+        parts.append(feat.mean(axis=0))
+        parts.append(feat.std(axis=0))
+        parts.append(feat.min(axis=0))
+        parts.append(feat.max(axis=0))
+    return np.concatenate(parts).astype(np.float32)
+
+
 def extract_mfcc_sequence(
     audio: np.ndarray,
     sr: int = SAMPLE_RATE,
@@ -174,22 +196,54 @@ def extract_features(
     sr: int = SAMPLE_RATE,
     n_mfcc: int = N_MFCC,
     preprocess: bool = True,
+    rich: bool = False,
 ) -> np.ndarray:
-    """End-to-end feature extraction from raw audio."""
+    """End-to-end feature extraction from raw audio.
+
+    Parameters
+    ----------
+    rich : bool
+        If True, use richer aggregation (4 stats → 156 dims).
+        Default False for backward compatibility.
+    """
     if preprocess:
         audio = preprocess_audio(audio, sr)
     mfcc = compute_mfcc_frames(audio, sr, n_mfcc)
+    if rich:
+        return aggregate_features_rich(mfcc)
     return aggregate_features(mfcc)
 
 
-def extract_features_from_file(path: str, n_mfcc: int = N_MFCC) -> np.ndarray:
-    """Extract aggregated MFCC features from an audio file."""
+def extract_features_from_file(
+    path: str,
+    n_mfcc: int = N_MFCC,
+    rich: bool = False,
+) -> np.ndarray:
+    """Extract aggregated MFCC features from an audio file.
+
+    Parameters
+    ----------
+    rich : bool
+        If True, use richer aggregation (4 stats → 156 dims).
+    """
     from audio_preprocess import load_audio
 
     audio, sr = load_audio(path)
-    return extract_features(audio, sr, n_mfcc)
+    return extract_features(audio, sr, n_mfcc, rich=rich)
 
 
 def feature_dim(n_mfcc: int = N_MFCC) -> int:
-    """Return the aggregated feature vector dimension."""
+    """Return the standard aggregated feature vector dimension (78)."""
     return n_mfcc * 3 * 2
+
+
+def feature_dim_rich(n_mfcc: int = N_MFCC) -> int:
+    """Return the rich aggregated feature vector dimension (156)."""
+    return n_mfcc * 3 * 4
+
+
+# Map feature mode names to their dim functions and aggregators
+FEATURE_MODES = {
+    "standard": (feature_dim, aggregate_features),
+    "rich": (feature_dim_rich, aggregate_features_rich),
+}

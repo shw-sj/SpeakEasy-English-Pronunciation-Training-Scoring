@@ -9,10 +9,10 @@
     "frame_shift_ms": 10
   },
   "models": {
-    "bp_letters": "results/bp_letters_model.pth",
-    "bp_words": "results/bp_words_model.pth",
-    "cnn_letters": "results/best_cnn_letters_model.pth",
-    "cnn_words": "results/best_cnn_words_model.pth"
+    "bp_letters": "results/bp_letters_best_acc.pth",
+    "bp_letters_swa": "results/bp_letters_swa.pth",
+    "cnn_letters": "results/best_cnn_letters_best_acc.pth",
+    "cnn_letters_swa": "results/best_cnn_letters_swa.pth"
   },
   "standard_audio_dir": "data/templates/gui_standard",
   "default_duration_seconds": 1.5

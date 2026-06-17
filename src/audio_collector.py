@@ -1,4 +1,4 @@
-"""Audio recording tool for collecting letter and word pronunciation samples."""
+"""Audio recording tool for collecting letter pronunciation samples."""
 
 from __future__ import annotations
 
@@ -15,11 +15,9 @@ import soundfile as sf
 
 from config import (
     CHANNELS,
-    DEFAULT_WORDS,
     LETTERS,
     LETTERS_DIR,
     SAMPLE_RATE,
-    WORDS_DIR,
 )
 
 
@@ -88,37 +86,10 @@ def collect_letters(
             save_recording(audio, path)
 
 
-def collect_words(
-    speaker: str,
-    words: list[str] | None = None,
-    repeats: int = 5,
-    duration: float = 3.0,
-    output_dir: Path = WORDS_DIR,
-) -> None:
-    """Interactive word collection: record each word *repeats* times."""
-    words = words or DEFAULT_WORDS
-    speaker_dir = output_dir / speaker
-    print(f"\n=== Word collection for speaker '{speaker}' ===")
-    print(f"{len(words)} words x {repeats} repetitions\n")
-
-    for word in words:
-        for rep in range(1, repeats + 1):
-            input(f"  [{word}] repetition {rep}/{repeats} - press Enter to record ")
-            audio = record_audio(duration)
-            idx = _next_index(speaker_dir / word, word)
-            filename = f"{word}_{idx:04d}.wav"
-            path = speaker_dir / word / filename
-            save_recording(audio, path)
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(description="SpeakEasy audio collector")
     parser.add_argument("--speaker", required=True, help="Speaker identifier")
-    parser.add_argument(
-        "--mode", choices=["letters", "words", "both"], default="both",
-    )
-    parser.add_argument("--letter-repeats", type=int, default=10)
-    parser.add_argument("--word-repeats", type=int, default=5)
+    parser.add_argument("--repeats", type=int, default=10)
     parser.add_argument(
         "--duration",
         type=float,
@@ -127,14 +98,9 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    if args.mode in ("letters", "both"):
-        collect_letters(
-            args.speaker, args.letter_repeats, args.duration,
-        )
-    if args.mode in ("words", "both"):
-        collect_words(
-            args.speaker, repeats=args.word_repeats, duration=args.duration,
-        )
+    collect_letters(
+        args.speaker, args.repeats, args.duration,
+    )
 
 
 if __name__ == "__main__":

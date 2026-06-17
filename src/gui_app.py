@@ -114,6 +114,8 @@ class CircularScoreWidget(QWidget):
         super().__init__()
         self._value = 0
         self._color = QColor("#e85d5d")
+        self._base_size = size
+        self._font_scale = 1.0
         self.setMinimumSize(size, size)
         self.setMaximumSize(size, size)
 
@@ -134,26 +136,36 @@ class CircularScoreWidget(QWidget):
         self.animation.setEasingCurve(QEasingCurve.OutCubic)
         self.animation.start()
 
+    def set_scale(self, scale: float) -> None:
+        """按比例缩放整个组件"""
+        self._font_scale = scale
+        sz = int(self._base_size * scale)
+        self.setMinimumSize(sz, sz)
+        self.setMaximumSize(sz, sz)
+        self.update()
+
     def paintEvent(self, event) -> None:
         del event
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        side = min(self.width(), self.height()) - 16
+        side = min(self.width(), self.height()) - int(16 * self._font_scale)
         rect = QRectF(
             (self.width() - side) / 2, (self.height() - side) / 2, side, side)
 
-        base_pen = QPen(QColor("#e8edf3"), 12)
+        pen_w = max(1, int(12 * self._font_scale))
+        base_pen = QPen(QColor("#e8edf3"), pen_w)
         base_pen.setCapStyle(Qt.RoundCap)
         painter.setPen(base_pen)
         painter.drawArc(rect, 0, 360 * 16)
 
-        value_pen = QPen(self._color, 12)
+        value_pen = QPen(self._color, pen_w)
         value_pen.setCapStyle(Qt.RoundCap)
         painter.setPen(value_pen)
         painter.drawArc(rect, 90 * 16, -int(360 * 16 * self._value / 100))
 
         painter.setPen(QColor("#253043"))
-        painter.setFont(QFont("Microsoft YaHei", 32, QFont.Bold))
+        font_sz = max(8, int(22 * self._font_scale))
+        painter.setFont(QFont("Microsoft YaHei", font_sz, QFont.Bold))
         painter.drawText(rect, Qt.AlignCenter, str(self._value))
 
 
@@ -407,8 +419,26 @@ class TrainingPage(QWidget):
         layout.addWidget(self.subtitle)
 
 
+# 自由朗读随机单词库
+FREE_WORD_BANK = [
+    "hello", "world", "apple", "beautiful", "different", "important",
+    "student", "teacher", "family", "friend", "music", "computer",
+    "language", "breakfast", "adventure", "chocolate", "elephant",
+    "guitar", "hospital", "kitchen", "library", "mountain", "ocean",
+    "piano", "rainbow", "sunshine", "telephone", "umbrella", "village",
+    "weather", "yesterday", "animal", "basketball", "camera", "diamond",
+    "english", "flower", "garden", "holiday", "internet", "journey",
+    "knowledge", "morning", "notebook", "orange", "picture", "question",
+    "restaurant", "sandwich", "tomorrow", "university", "vacation",
+    "window", "afternoon", "birthday", "dictionary", "exercise",
+    "favorite", "goodbye", "homework", "island", "jacket",
+]
+
+
 class FreeReadingInput(QWidget):
-    """自由朗读输入区 —— 只有单词输入+查询+提示，简洁"""
+    """自由朗读输入区 —— 单词输入+查询+随机推荐+提示"""
+
+    # 信号：请求自动查询 (word)
     def __init__(self) -> None:
         super().__init__()
         self.word_info_cache: dict | None = None
@@ -425,26 +455,35 @@ class FreeReadingInput(QWidget):
         input_row.setSpacing(6)
         self.word_input = QLineEdit()
         self.word_input.setPlaceholderText("输入要练习的英文单词，如 apple")
-        self.word_input.setMinimumHeight(42)
+        self.word_input.setMinimumHeight(32)
         self.word_input.setStyleSheet(
-            "QLineEdit { font-size: 18px; padding: 6px 10px; "
+            "QLineEdit { font-size: 15px; padding: 4px 8px; "
             "border: 2px solid #d7e2ef; border-radius: 8px; "
             "background: white; }"
             "QLineEdit:focus { border-color: #4b8fe8; }")
         input_row.addWidget(self.word_input, stretch=1)
         self.lookup_btn = QPushButton("🔍 查询")
-        self.lookup_btn.setMinimumHeight(38)
+        self.lookup_btn.setMinimumHeight(32)
         self.lookup_btn.setObjectName("accentBtn")
         input_row.addWidget(self.lookup_btn)
         layout.addLayout(input_row)
 
+        # 随机推荐按钮行
+        random_row = QHBoxLayout()
+        random_row.setSpacing(6)
+        self.random_btn = QPushButton("🎲 随机推荐单词")
+        self.random_btn.setMinimumHeight(28)
+        random_row.addWidget(self.random_btn)
+        random_row.addStretch()
+        layout.addLayout(random_row)
+
         # 提示标签
-        self.hint_label = QLabel("请输入单词并点击查询，然后录音朗读")
+        self.hint_label = QLabel("请输入单词并点击查询，或点「随机推荐」，然后录音朗读")
         self.hint_label.setAlignment(Qt.AlignCenter)
         self.hint_label.setObjectName("freeHint")
         self.hint_label.setWordWrap(True)
         self.hint_label.setStyleSheet(
-            "font-size: 17px; color: #64748b; padding: 10px; "
+            "font-size: 14px; color: #64748b; padding: 8px; "
             "background: #f7fafd; border-radius: 8px;")
         layout.addWidget(self.hint_label)
 
@@ -458,6 +497,12 @@ class FreeReadingInput(QWidget):
         word = info.get('word', '')
         phonetic = info.get('phonetic', 'N/A')
         self.hint_label.setText(f"🎯 单词: {word}   音标: {phonetic}\n请点击录音按钮朗读此单词")
+
+    def set_random_word(self) -> str:
+        """随机选择一个单词填入输入框并返回"""
+        word = random.choice(FREE_WORD_BANK)
+        self.word_input.setText(word)
+        return word
 
 
 # ═══════════════════════════════════════════════════════
@@ -478,12 +523,12 @@ class FreeModeResultPanel(QWidget):
         wc_layout = QVBoxLayout(self.word_card)
         wc_layout.setSpacing(6)
         self.phonetic_label = QLabel("音标：--")
-        self.phonetic_label.setStyleSheet("font-size: 64px; font-weight: 700; color: #4b8fe8;")
+        self.phonetic_label.setStyleSheet("font-size: 24px; font-weight: 700; color: #4b8fe8;")
         self.def_label = QLabel("释义：--")
         self.def_label.setWordWrap(True)
-        self.def_label.setStyleSheet("font-size: 36px; color: #253043; line-height: 1.6;")
+        self.def_label.setStyleSheet("font-size: 15px; color: #253043; line-height: 1.6;")
         self.audio_status = QLabel("标准发音：--")
-        self.audio_status.setStyleSheet("font-size: 30px; color: #64748b;")
+        self.audio_status.setStyleSheet("font-size: 13px; color: #64748b;")
         wc_layout.addWidget(self.phonetic_label)
         wc_layout.addWidget(self.def_label)
         wc_layout.addWidget(self.audio_status)
@@ -509,20 +554,20 @@ class FreeModeResultPanel(QWidget):
         self.yd_overall = QLabel("--")
         self.yd_overall.setAlignment(Qt.AlignCenter)
         self.yd_overall.setStyleSheet(
-            "font-size: 128px; font-weight: 900; color: #3bb273;")
+            "font-size: 52px; font-weight: 900; color: #3bb273;")
         self.yd_overall_label = QLabel("综合评分")
         self.yd_overall_label.setAlignment(Qt.AlignCenter)
-        self.yd_overall_label.setStyleSheet("font-size: 32px; color: #64748b;")
+        self.yd_overall_label.setStyleSheet("font-size: 14px; color: #64748b;")
 
         self.yd_pron = QLabel("准确度\n--")
         self.yd_pron.setAlignment(Qt.AlignCenter)
-        self.yd_pron.setStyleSheet("font-size: 40px; font-weight: 700;")
+        self.yd_pron.setStyleSheet("font-size: 18px; font-weight: 700;")
         self.yd_fluency = QLabel("流利度\n--")
         self.yd_fluency.setAlignment(Qt.AlignCenter)
-        self.yd_fluency.setStyleSheet("font-size: 40px; font-weight: 700;")
+        self.yd_fluency.setStyleSheet("font-size: 18px; font-weight: 700;")
         self.yd_speed = QLabel("语速\n--")
         self.yd_speed.setAlignment(Qt.AlignCenter)
-        self.yd_speed.setStyleSheet("font-size: 40px; font-weight: 700;")
+        self.yd_speed.setStyleSheet("font-size: 18px; font-weight: 700;")
 
         sc_layout.addWidget(self.yd_overall, 0, 0, 3, 1)
         sc_layout.addWidget(self.yd_overall_label, 3, 0)
@@ -533,7 +578,7 @@ class FreeModeResultPanel(QWidget):
         self.yd_suggestions = QLabel("")
         self.yd_suggestions.setWordWrap(True)
         self.yd_suggestions.setStyleSheet(
-            "font-size: 34px; color: #f2a541; padding: 6px; "
+            "font-size: 15px; color: #f2a541; padding: 6px; "
             "background: #fff8e8; border-radius: 6px;")
         sc_layout.addWidget(self.yd_suggestions, 4, 0, 1, 2)
         layout.addWidget(self.score_card)
@@ -546,7 +591,7 @@ class FreeModeResultPanel(QWidget):
         self.ds_text.setReadOnly(True)
         self.ds_text.setPlaceholderText("录音评分完成后，AI 将在此给出详细的发音改进建议...")
         self.ds_text.setStyleSheet(
-            "QTextEdit { font-size: 48px; border: 1px solid #e0e7f0; "
+            "QTextEdit { font-size: 16px; border: 1px solid #e0e7f0; "
             "border-radius: 8px; padding: 14px; background: #fafcfd; "
             "line-height: 1.7; }")
         ds_layout.addWidget(self.ds_text)
@@ -570,9 +615,10 @@ class FreeModeResultPanel(QWidget):
         self.free_standard_btn.setEnabled(True)
 
     def set_youdao_result(self, result: dict | None) -> None:
+        # Note: set_scale() handles base styles; here we just update the value-dependent colors
         if result is None or result.get("errorCode") != "0":
             self.yd_overall.setText("--")
-            self.yd_overall.setStyleSheet("font-size: 64px; font-weight: 900; color: #ccc;")
+            self.yd_overall.setStyleSheet(self.yd_overall.styleSheet().replace("#3bb273", "#ccc"))
             self.yd_pron.setText("准确度\n--")
             self.yd_fluency.setText("流利度\n--")
             self.yd_speed.setText("语速\n--")
@@ -584,17 +630,41 @@ class FreeModeResultPanel(QWidget):
         speed = result.get("speed", 0)
         c = _score_color(overall)
         self.yd_overall.setText(f"{overall:.0f}")
-        self.yd_overall.setStyleSheet(f"font-size: 128px; font-weight: 900; color: {c};")
+        self.yd_overall.setStyleSheet(f"font-size: {self._s(52)}; font-weight: 900; color: {c};")
         self.yd_pron.setText(f"准确度\n{pron:.0f}/100")
-        self.yd_pron.setStyleSheet(f"font-size: 40px; font-weight: 700; color: {_score_color(pron)};")
+        self.yd_pron.setStyleSheet(f"font-size: {self._s(18)}; font-weight: 700; color: {_score_color(pron)};")
         self.yd_fluency.setText(f"流利度\n{fluency:.0f}/100")
-        self.yd_fluency.setStyleSheet(f"font-size: 40px; font-weight: 700; color: {_score_color(fluency)};")
+        self.yd_fluency.setStyleSheet(f"font-size: {self._s(18)}; font-weight: 700; color: {_score_color(fluency)};")
         self.yd_speed.setText(f"语速\n{speed:.0f} wpm")
         suggestions = result.get("suggestions", [])
         self.yd_suggestions.setText("  |  ".join(suggestions) if suggestions else "✨ 发音很好！")
 
     def set_deepseek_advice(self, text: str) -> None:
         self.ds_text.setPlainText(text if text else "（未能获取 AI 建议，请稍后重试）")
+
+    def _s(self, base: int) -> str:
+        return f"{int(base * getattr(self, '_panel_scale', 1.0))}px"
+
+    def set_scale(self, sc: float) -> None:
+        """按比例缩放面板内所有字体"""
+        self._panel_scale = sc
+        s = lambda b: self._s(b)
+        self.phonetic_label.setStyleSheet(f"font-size: {s(24)}; font-weight: 700; color: #4b8fe8;")
+        self.def_label.setStyleSheet(f"font-size: {s(15)}; color: #253043; line-height: 1.6;")
+        self.audio_status.setStyleSheet(f"font-size: {s(13)}; color: #64748b;")
+        self.yd_overall.setStyleSheet(f"font-size: {s(52)}; font-weight: 900; color: #3bb273;")
+        self.yd_overall_label.setStyleSheet(f"font-size: {s(14)}; color: #64748b;")
+        self.yd_pron.setStyleSheet(f"font-size: {s(18)}; font-weight: 700;")
+        self.yd_fluency.setStyleSheet(f"font-size: {s(18)}; font-weight: 700;")
+        self.yd_speed.setStyleSheet(f"font-size: {s(18)}; font-weight: 700;")
+        self.yd_suggestions.setStyleSheet(
+            f"font-size: {s(15)}; color: #f2a541; padding: {s(6)}; "
+            f"background: #fff8e8; border-radius: {s(6)};")
+        self.ds_text.setStyleSheet(
+            f"QTextEdit {{ font-size: {s(16)}; border: 1px solid #e0e7f0; "
+            f"border-radius: {s(8)}; padding: {s(14)}; background: #fafcfd; "
+            f"line-height: 1.7; }}")
+        self.free_standard_btn.setMinimumHeight(int(36 * sc))
 
 
 # ═══════════════════════════════════════════════════════
@@ -605,6 +675,7 @@ class SpeakEasyWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("SpeakEasy · 英语口语发音训练系统")
+        self.setMinimumSize(1000, 680)
         self.resize(1450, 920)
 
         self.model_manager = ModelManager()
@@ -621,12 +692,13 @@ class SpeakEasyWindow(QMainWindow):
         self.current_word_idx = DEFAULT_WORDS.index(self.current_word)
         self.order_mode = "random"  # "random" or "sequential"
         self.nav_stack: list[dict] = []  # 导航历史：上一步状态
+        self._current_scale = 1.0  # 当前缩放比例
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.refresh_live_wave)
 
         self.build_ui()
-        self.apply_style()
+        self._apply_scaled_style(1.0)
         self.update_prompt()
 
     # ── build_ui ──────────────────────────────────────
@@ -652,7 +724,7 @@ class SpeakEasyWindow(QMainWindow):
         # ============ 左边栏 (440px) ============
         self.left_frame = QFrame()
         self.left_frame.setObjectName("sidePanel")
-        self.left_frame.setMinimumWidth(460)
+        self.left_frame.setMinimumWidth(360)
         left_layout = QVBoxLayout(self.left_frame)
         left_layout.setContentsMargins(14, 14, 14, 14)
         left_layout.setSpacing(10)
@@ -748,7 +820,7 @@ class SpeakEasyWindow(QMainWindow):
         self.feedback_label = QLabel("等待录音")
         self.feedback_label.setObjectName("feedbackText")
         self.feedback_label.setWordWrap(True)
-        self.score_widget = CircularScoreWidget(150)
+        self.score_widget = CircularScoreWidget(120)
         result_layout.addWidget(self.pred_label, 0, 0, 1, 2)
         result_layout.addWidget(self.score_widget, 1, 0, 2, 1)
         result_layout.addWidget(self.conf_label, 1, 1)
@@ -782,111 +854,154 @@ class SpeakEasyWindow(QMainWindow):
         # -- 信号连接 --
         self.free_input.lookup_btn.clicked.connect(self.do_word_lookup)
         self.free_input.word_input.returnPressed.connect(self.do_word_lookup)
+        self.free_input.random_btn.clicked.connect(self.do_random_word)
         self.free_result_panel.free_standard_btn.clicked.connect(self.play_free_standard)
 
-    # ── apply_style ───────────────────────────────────
+    # ── 自适应缩放 ────────────────────────────────────
 
-    def apply_style(self) -> None:
-        self.setStyleSheet("""
+    def _scale(self) -> float:
+        """基于窗口宽度计算缩放比例"""
+        return max(0.70, min(1.56, self.width() / 1450.0))
+
+    def _s(self, base: int) -> str:
+        """返回缩放后的 px 值字符串"""
+        return f"{int(base * self._current_scale)}px"
+
+    def _apply_scaled_style(self, scale: float) -> None:
+        """根据缩放比例重建样式表"""
+        self._current_scale = scale
+        s = self._s  # shorthand
+
+        self.setStyleSheet(f"""
         /* 全局 */
-        QMainWindow { background: #f0f4f8; }
-        QLabel#appTitle {
-            color: #1a2332; font-size: 34px; font-weight: 800;
-            padding: 8px 0; letter-spacing: 2px;
-        }
+        QMainWindow {{ background: #f0f4f8; }}
+        QLabel#appTitle {{
+            color: #1a2332; font-size: {s(28)}; font-weight: 800;
+            padding: {s(6)} 0; letter-spacing: 2px;
+        }}
 
         /* 面板 */
-        QFrame#sidePanel {
+        QFrame#sidePanel {{
             background: #ffffff; border: 1px solid #e2e8f0;
-            border-radius: 12px;
-        }
-        QFrame#rightPanel {
+            border-radius: {s(12)};
+        }}
+        QFrame#rightPanel {{
             background: #ffffff; border: 1px solid #e2e8f0;
-            border-radius: 12px;
-        }
+            border-radius: {s(12)};
+        }}
 
         /* 标签页 */
-        QTabWidget::pane { border: 0; }
-        QTabBar::tab {
-            background: #f1f5f9; color: #475569; border-radius: 8px;
-            padding: 12px 20px; margin-right: 5px; font-size: 18px; font-weight: 600;
-        }
-        QTabBar::tab:selected { background: #4b8fe8; color: white; }
+        QTabWidget::pane {{ border: 0; }}
+        QTabBar::tab {{
+            background: #f1f5f9; color: #475569; border-radius: {s(8)};
+            padding: {s(10)} {s(16)}; margin-right: {s(4)}; font-size: {s(16)}; font-weight: 600;
+        }}
+        QTabBar::tab:selected {{ background: #4b8fe8; color: white; }}
 
         /* 标题 */
-        QLabel#sectionTitle {
-            font-size: 24px; font-weight: 700; color: #1a2332;
-        }
-        QLabel#bigPrompt {
-            font-size: 110px; font-weight: 800; color: #4b8fe8;
-            background: #eef5ff; border-radius: 10px; padding: 20px;
-        }
-        QLabel#hintText {
-            font-size: 19px; color: #64748b; line-height: 1.5;
-        }
+        QLabel#sectionTitle {{
+            font-size: {s(20)}; font-weight: 700; color: #1a2332;
+        }}
+        QLabel#bigPrompt {{
+            font-size: {s(72)}; font-weight: 800; color: #4b8fe8;
+            background: #eef5ff; border-radius: {s(10)}; padding: {s(16)};
+        }}
+        QLabel#hintText {{
+            font-size: {s(15)}; color: #64748b; line-height: 1.5;
+        }}
 
         /* 通用按钮 */
-        QPushButton {
+        QPushButton {{
             background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0;
-            border-radius: 8px; padding: 10px 14px; font-size: 16px; font-weight: 600;
-        }
-        QPushButton:hover { background: #e2e8f0; }
+            border-radius: {s(8)}; padding: {s(8)} {s(12)}; font-size: {s(14)}; font-weight: 600;
+        }}
+        QPushButton:hover {{ background: #e2e8f0; }}
 
         /* 录音按钮 */
-        QPushButton#recordBtn {
+        QPushButton#recordBtn {{
             background: #3bb273; color: white; border: 0;
-            font-size: 24px; font-weight: 700; border-radius: 12px;
-        }
-        QPushButton#recordBtn:hover { background: #319762; }
+            font-size: {s(20)}; font-weight: 700; border-radius: {s(12)};
+        }}
+        QPushButton#recordBtn:hover {{ background: #319762; }}
 
         /* 强调按钮 */
-        QPushButton#accentBtn {
+        QPushButton#accentBtn {{
             background: #4b8fe8; color: white; border: 0;
-        }
-        QPushButton#accentBtn:hover { background: #3a7bd5; }
+        }}
+        QPushButton#accentBtn:hover {{ background: #3a7bd5; }}
 
         /* 下拉框 */
-        QComboBox {
-            background: white; border: 1px solid #e2e8f0; border-radius: 8px;
-            padding: 7px 12px; font-size: 16px;
-        }
-        QComboBox:hover { border-color: #4b8fe8; }
+        QComboBox {{
+            background: white; border: 1px solid #e2e8f0; border-radius: {s(8)};
+            padding: {s(6)} {s(10)}; font-size: {s(14)};
+        }}
+        QComboBox:hover {{ border-color: #4b8fe8; }}
 
         /* 分组框 */
-        QGroupBox {
-            font-size: 18px; font-weight: 700; color: #1a2332;
-            border: 1px solid #e2e8f0; border-radius: 10px;
-            margin-top: 8px; padding: 12px 10px 10px 10px;
-        }
-        QGroupBox::title {
-            subcontrol-origin: margin; left: 14px; padding: 0 6px;
+        QGroupBox {{
+            font-size: {s(15)}; font-weight: 700; color: #1a2332;
+            border: 1px solid #e2e8f0; border-radius: {s(10)};
+            margin-top: {s(6)}; padding: {s(10)} {s(8)} {s(8)} {s(8)};
+        }}
+        QGroupBox::title {{
+            subcontrol-origin: margin; left: {s(14)}; padding: 0 {s(6)};
             color: #4b8fe8;
-        }
+        }}
 
         /* 结果 */
-        QLabel#resultText {
-            font-size: 42px; font-weight: 800; color: #1a2332;
-        }
-        QLabel#feedbackText {
-            font-size: 24px; font-weight: 700; color: #1a2332;
-        }
+        QLabel#resultText {{
+            font-size: {s(28)}; font-weight: 800; color: #1a2332;
+        }}
+        QLabel#feedbackText {{
+            font-size: {s(18)}; font-weight: 700; color: #1a2332;
+        }}
 
         /* 列表 */
-        QListWidget {
-            border: 0; background: #f8fafc; border-radius: 8px;
-            padding: 4px; font-size: 15px;
-        }
+        QListWidget {{
+            border: 0; background: #f8fafc; border-radius: {s(8)};
+            padding: {s(3)}; font-size: {s(13)};
+        }}
 
         /* ScrollArea */
-        QScrollArea { border: 0; background: transparent; }
-        QScrollBar:vertical {
-            background: transparent; width: 6px;
-        }
-        QScrollBar::handle:vertical {
-            background: #cbd5e1; border-radius: 3px; min-height: 20px;
-        }
-        QScrollBar::handle:vertical:hover { background: #94a3b8; }
+        QScrollArea {{ border: 0; background: transparent; }}
+        QScrollBar:vertical {{
+            background: transparent; width: {s(6)};
+        }}
+        QScrollBar::handle:vertical {{
+            background: #cbd5e1; border-radius: {s(3)}; min-height: {s(20)};
+        }}
+        QScrollBar::handle:vertical:hover {{ background: #94a3b8; }}
         """)
+
+        # 动态缩放左栏宽度
+        self.left_frame.setMinimumWidth(int(360 * scale))
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        new_scale = self._scale()
+        if abs(new_scale - self._current_scale) > 0.02:
+            self._apply_scaled_style(new_scale)
+            self._update_dynamic_sizes()
+
+    def _update_dynamic_sizes(self) -> None:
+        """更新代码中动态设置的尺寸"""
+        sc = self._current_scale
+        # 评分圆环
+        self.score_widget.set_scale(sc)
+        # 自由模式输入框字体
+        self.free_input.word_input.setStyleSheet(
+            f"QLineEdit {{ font-size: {int(15*sc)}px; padding: {int(4*sc)}px {int(8*sc)}px; "
+            f"border: 2px solid #d7e2ef; border-radius: {int(8*sc)}px; "
+            f"background: white; }}"
+            f"QLineEdit:focus {{ border-color: #4b8fe8; }}")
+        self.free_input.word_input.setMinimumHeight(int(32 * sc))
+        self.free_input.lookup_btn.setMinimumHeight(int(32 * sc))
+        self.free_input.random_btn.setMinimumHeight(int(28 * sc))
+        self.free_input.hint_label.setStyleSheet(
+            f"font-size: {int(14*sc)}px; color: #64748b; padding: {int(8*sc)}px; "
+            f"background: #f7fafd; border-radius: {int(8*sc)}px;")
+        # 自由模式右侧面板
+        self.free_result_panel.set_scale(sc)
 
     # ── mode / dataset / target ────────────────────────
 
@@ -1080,7 +1195,8 @@ class SpeakEasyWindow(QMainWindow):
         self.pred_label.setText(f"{pred}")
         self.conf_label.setText(f"置信度：{result.confidence * 100:.1f}%")
         self.feedback_label.setText(f"{stars}  {feedback}")
-        self.feedback_label.setStyleSheet(f"color: {color}; font-size: 24px; font-weight: 700;")
+        fs = int(18 * self._current_scale)
+        self.feedback_label.setStyleSheet(f"color: {color}; font-size: {fs}px; font-weight: 700;")
         self.score_widget.animate_to(score)
 
         standard_audio = None
@@ -1117,9 +1233,10 @@ class SpeakEasyWindow(QMainWindow):
                 self.pred_label.setText(f"{word}")
                 self.conf_label.setText("有道智云评测")
                 fb, stars, color = score_text(int(overall))
+                fs = int(18 * self._current_scale)
                 self.feedback_label.setText(
                     f"{stars}  综合{overall:.0f} | 准确度{pron:.0f} | 流利度{fluency:.0f}")
-                self.feedback_label.setStyleSheet(f"color: {color}; font-size: 24px; font-weight: 700;")
+                self.feedback_label.setStyleSheet(f"color: {color}; font-size: {fs}px; font-weight: 700;")
                 self.score_widget.animate_to(int(overall))
                 self.add_history(word, word, int(overall))
 
@@ -1133,7 +1250,7 @@ class SpeakEasyWindow(QMainWindow):
                 self.free_result_panel.set_deepseek_advice(advice)
                 self.feedback_label.setText(f"{stars}  有道{overall:.0f}分 | AI建议已生成 ✓")
                 self.feedback_label.setStyleSheet(
-                    f"color: {color}; font-size: 24px; font-weight: 700;")
+                    f"color: {color}; font-size: {fs}px; font-weight: 700;")
             else:
                 self.pred_label.setText(f"{word}")
                 self.conf_label.setText("评分失败")
@@ -1217,6 +1334,11 @@ class SpeakEasyWindow(QMainWindow):
             QMessageBox.warning(self, "标准发音", f"播放失败：{exc}")
 
     # ── word lookup ───────────────────────────────────
+
+    def do_random_word(self) -> None:
+        """随机推荐一个单词并自动查询"""
+        word = self.free_input.set_random_word()
+        self.do_word_lookup()
 
     def do_word_lookup(self) -> None:
         """查询单词 - 结果同时更新左侧提示和右侧面板"""

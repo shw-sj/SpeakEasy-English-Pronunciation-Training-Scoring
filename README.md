@@ -16,7 +16,7 @@
 │   ├── prepare_data.py      # 数据集准备（特征提取 + 划分）
 │   ├── config.py            # 全局路径/常量配置
 │   └── train_utils.py       # 通用训练工具
-├── lstm_network.py          # 双向 LSTM + 注意力池化模型
+├── lstm_network.py          # PyTorch 标准双向 LSTM 模型
 ├── lstm_train.py            # LSTM 训练脚本
 ├── dtw_matcher.py           # DTW 动态时间规整匹配器
 ├── pronunciation_scorer.py  # 三维度融合发音评分器（核心模块）
@@ -47,7 +47,7 @@
 
 | 模型 | 架构特点 | 输入维度 |
 |------|---------|---------|
-| **BiLSTM** | 双向 LSTM + 时间注意力池化 + LayerNorm | 可变长度 `(T, 39)` 时序特征 |
+| **BiLSTM** | PyTorch `nn.LSTM` + 全连接分类层 | 可变长度 `(T, 39)` 时序特征 |
 
 训练特性：
 - **Label smoothing**：减少过度自信

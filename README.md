@@ -10,16 +10,14 @@
 │   ├── gui_app.py           # 图形界面主程序
 │   ├── audio_collector.py   # 音频采集模块
 │   ├── audio_preprocess.py  # 音频预处理（降噪、VAD、归一化）
-│   ├── audio_feature.py     # MFCC 特征提取（支持 rich 156 维特征）
+│   ├── audio_feature.py     # MFCC 时序特征提取
 │   ├── data_augmentation.py # 数据增强（噪声、音高、速度、混响等）
 │   ├── template_builder.py  # 标准发音模板库构建
 │   ├── prepare_data.py      # 数据集准备（特征提取 + 划分）
 │   ├── config.py            # 全局路径/常量配置
-│   └── train_utils.py       # 训练工具（FocalLoss、Mixup、CosineWarmRestarts 等）
-├── bp_network.py            # BP 神经网络模型定义（MLP + ResidualBlock）
-├── bp_train.py              # BP 网络训练脚本
-├── cnn_network.py           # CNN1D 模型定义（ResidualConvBlock + SE 注意力）
-├── cnn_train.py             # CNN 训练脚本
+│   └── train_utils.py       # 通用训练工具
+├── lstm_network.py          # 双向 LSTM + 注意力池化模型
+├── lstm_train.py            # LSTM 训练脚本
 ├── dtw_matcher.py           # DTW 动态时间规整匹配器
 ├── pronunciation_scorer.py  # 三维度融合发音评分器（核心模块）
 ├── metrics.py               # 评价指标与可视化（分类/评分/图表）
@@ -41,23 +39,20 @@
 - 数据增强：白噪声/粉红噪声/棕色噪声、音高偏移、语速变化、房间混响、RIR 卷积混响、音量调节等
 
 ### 2. MFCC 特征提取
-- 标准 78 维特征：13 维 MFCC（static + Δ + ΔΔ）× 6 统计量（mean/std/min/max）
-- Rich 156 维特征：额外包含谱质心、谱带宽、过零率等声学特征
+- 每帧 39 维特征：13 维 MFCC + 13 维 Δ + 13 维 ΔΔ
+- 保留完整时间轴 `(T, 39)`，供 LSTM 学习发音过程
 - 帧长 25ms，帧移 10ms，16kHz 采样率
 
 ### 3. 深度学习模型（字母识别）
 
 | 模型 | 架构特点 | 输入维度 |
 |------|---------|---------|
-| **BP Network** | MLP + ResidualBlock + BatchNorm | 156-dim 聚合特征向量 |
-| **CNN1D** | 4 阶段残差卷积 + SE 注意力 + AdaptiveAvgPool | 156-dim（按 mel 频带分组） |
+| **BiLSTM** | 双向 LSTM + 时间注意力池化 + LayerNorm | 可变长度 `(T, 39)` 时序特征 |
 
 训练特性：
-- **FocalLoss**：自动聚焦容易混淆的字母对（如 B/D、M/N）
-- **Mixup**：数据混合增强泛化能力
-- **CosineWarmRestarts**：余弦退火 + 热重启学习率调度
-- **SWA**（随机权重平均）：平坦极小值集成，提升泛化性能
-- **Gradient Noise** + **Gradient Clipping**：稳定训练
+- **Label smoothing**：减少过度自信
+- **ReduceLROnPlateau**：根据验证损失自动降低学习率
+- **Gradient Clipping**：稳定循环网络训练
 
 ### 4. 三维度融合发音评分 ⭐
 
@@ -98,18 +93,15 @@ python src/audio_collector.py
 # 2. 数据增强
 python src/data_augmentation.py
 
-# 3. 提取特征并划分数据集
-python src/prepare_data.py
+# 3. 提取时序特征并划分数据集
+python src/prepare_data.py --export-sequences
 ```
 
 ### 模型训练
 
 ```bash
-# 训练 BP 网络
-python bp_train.py
-
-# 训练 CNN 网络
-python cnn_train.py
+# 训练 LSTM 网络
+python lstm_train.py
 ```
 
 ### 启动 GUI 应用
@@ -139,8 +131,7 @@ print(result.total_score, result.grade, result.star_rating)
 | `sample_rate` | 采样率 | 16000 Hz |
 | `mfcc.n_mfcc` | MFCC 系数数量 | 13 |
 | `mfcc.n_mel_filters` | Mel 滤波器组数量 | 26 |
-| `models.bp_letters` | BP 模型权重路径 | results/bp_letters_best_acc.pth |
-| `models.cnn_letters` | CNN 模型权重路径 | results/best_cnn_letters_best_acc.pth |
+| `models.lstm_letters` | LSTM 模型权重路径 | results/best_lstm_letters_best_acc.pth |
 | `standard_audio_dir` | 标准发音模板目录 | data/templates/gui_standard |
 | `default_duration_seconds` | 默认录音时长 | 1.5s |
 

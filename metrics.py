@@ -470,8 +470,7 @@ if __name__ == "__main__":
     # 测试6：模型对比
     print("\n[Test 6] Model Comparison Bar Chart")
     model_data = {
-        "BP": {"accuracy": 0.823, "params": 285000, "infer_time_ms": 0.8},
-        "CNN": {"accuracy": 0.891, "params": 145000, "infer_time_ms": 2.1},
+        "LSTM": {"accuracy": 0.891, "params": 600000, "infer_time_ms": 2.1},
     }
     plot_model_comparison_bar(model_data, save_path='model_comparison_test.png')
 

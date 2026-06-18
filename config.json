@@ -9,10 +9,7 @@
     "frame_shift_ms": 10
   },
   "models": {
-    "bp_letters": "results/bp_letters_best_acc.pth",
-    "bp_letters_swa": "results/bp_letters_swa.pth",
-    "cnn_letters": "results/best_cnn_letters_best_acc.pth",
-    "cnn_letters_swa": "results/best_cnn_letters_swa.pth"
+    "lstm_letters": "results/best_lstm_letters_best_acc.pth"
   },
   "standard_audio_dir": "data/templates/gui_standard",
   "default_duration_seconds": 1.5

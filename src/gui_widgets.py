@@ -258,7 +258,9 @@ class ModelManager:
                               task=str(data.get("task", dataset))).to(self.device)
         else:
             model = CNN1D(input_dim=input_dim, num_classes=output_dim,
-                          dropout_rate=float(data.get("dropout_rate", 0.3))).to(self.device)
+                          dropout_rate=float(data.get("dropout_rate", 0.3)),
+                          channels=tuple(data.get("channels", (32, 64, 128, 256))),
+                          freq_groups=data.get("freq_groups")).to(self.device)
         model.load_state_dict(data["state_dict"])
         model.eval()
         loaded = (model, labels, mean, std)
@@ -712,6 +714,3 @@ class FreeModeResultPanel(QWidget):
             f"border-radius: {s(8)}; padding: {s(14)}; background: #fafcfd; "
             f"line-height: 1.7; }}")
         self.free_standard_btn.setMinimumHeight(int(36 * sc))
-
-
-

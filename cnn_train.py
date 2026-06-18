@@ -2,8 +2,9 @@
 
 Improvements over baseline:
 - FocalLoss: focuses training on hard-to-classify letters
-- CosineWarmRestarts + warmup: better LR schedule
+- OneCycleLR: single-cycle cosine anneal for faster, better convergence
 - SWA (Stochastic Weight Averaging): flat-minima ensemble for better generalisation
+- SiLU activation: smoother gradients than ReLU
 - Larger channels (32→64→128→256) with freq_groups=13 for meaningful conv over mel bins
 """
 
@@ -28,10 +29,10 @@ from cnn_network import CNN1D
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 from config import FEATURES_DIR
 from train_utils import (
-    CosineWarmRestarts,
     FocalLoss,
     add_gradient_noise,
     compute_loss,
+    freq_mask_features,
     mixup_batch as mixup_batch_new,
 )
 
@@ -91,8 +92,7 @@ def _make_loader(X, y, batch_size, shuffle):
 
 def train_cnn_network():
     # ── Hyperparameters ──
-    learning_rate = 1e-3
-    lr_min = 1e-6
+    max_lr = 5e-3
     epochs = 120
     early_stop_patience = 25
     batch_size = 64
@@ -106,10 +106,9 @@ def train_cnn_network():
     # ── Focal Loss ──
     focal_gamma = 2.0
 
-    # ── LR schedule ──
-    warmup_epochs = 5
-    cosine_t0 = 30
-    cosine_tmult = 2
+    # ── OneCycleLR ──
+    onecycle_pct_start = 0.3
+    onecycle_final_div = 1e4
 
     # ── SWA ──
     swa_start = 80
@@ -139,8 +138,8 @@ def train_cnn_network():
           f"mixup_alpha={mixup_alpha}")
     print(f"[CNN] dropout={dropout_rate} | weight_decay={weight_decay}")
     print(f"[CNN] channels={channels} | freq_groups={freq_groups}")
-    print(f"[CNN] CosineWarmRestarts T0={cosine_t0} Tmult={cosine_tmult} "
-          f"warmup={warmup_epochs}")
+    print(f"[CNN] OneCycleLR max_lr={max_lr} pct_start={onecycle_pct_start} "
+          f"final_div={onecycle_final_div}")
     print(f"[CNN] SWA start={swa_start} swa_lr={swa_lr}")
     print("=" * 72)
 
@@ -153,18 +152,19 @@ def train_cnn_network():
     criterion = FocalLoss(gamma=focal_gamma, label_smoothing=label_smoothing)
     val_criterion = nn.CrossEntropyLoss()
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate,
+    optimizer = torch.optim.AdamW(model.parameters(), lr=max_lr,
                                   weight_decay=weight_decay)
 
     train_loader = _make_loader(X_train, y_train, batch_size, shuffle=True)
     val_X = torch.as_tensor(X_val, dtype=torch.float32, device=device)
     val_y = torch.as_tensor(y_val, dtype=torch.long, device=device)
 
-    # ── LR schedule ──
-    lr_schedule = CosineWarmRestarts(
-        base_lr=learning_rate, min_lr=lr_min,
-        T_0=cosine_t0, T_mult=cosine_tmult,
-        warmup_epochs=warmup_epochs,
+    # ── OneCycleLR: warmup 30% → peak → cosine anneal to ~0 ──
+    total_steps = epochs * len(train_loader)
+    lr_schedule = torch.optim.lr_scheduler.OneCycleLR(
+        optimizer, max_lr=max_lr, total_steps=total_steps,
+        pct_start=onecycle_pct_start, anneal_strategy="cos",
+        final_div_factor=onecycle_final_div,
     )
 
     # ── SWA ──
@@ -181,10 +181,6 @@ def train_cnn_network():
     swa_save_path = Path("results") / "best_cnn_letters_swa.pth"
 
     for epoch in range(1, epochs + 1):
-        current_lr = lr_schedule.get_lr(epoch)
-        for group in optimizer.param_groups:
-            group["lr"] = current_lr
-
         model.train()
         total_loss = 0.0
         total_seen = 0
@@ -193,6 +189,9 @@ def train_cnn_network():
             y_batch = y_batch.to(device)
 
             X_batch, y_target = mixup_batch_new(X_batch, y_batch, mixup_alpha, num_classes)
+
+            # Frequency-bin masking: forces model to use diverse frequency regions
+            X_batch = freq_mask_features(X_batch, freq_groups=freq_groups)
 
             optimizer.zero_grad(set_to_none=True)
             logits = model(X_batch)
@@ -205,6 +204,7 @@ def train_cnn_network():
 
             nn.utils.clip_grad_norm_(model.parameters(), clip_grad)
             optimizer.step()
+            lr_schedule.step()  # per-batch LR update
             total_loss += float(loss.item()) * len(X_batch)
             total_seen += len(X_batch)
 
@@ -227,6 +227,7 @@ def train_cnn_network():
 
         if epoch == 1 or epoch % 10 == 0:
             swa_tag = " [SWA]" if epoch >= swa_start else ""
+            current_lr = optimizer.param_groups[0]["lr"]
             print(
                 f"[CNN] Epoch {epoch:03d}/{epochs} | lr={current_lr:.6f} | "
                 f"train_loss={avg_train_loss:.4f} | val_loss={vl:.4f} | "
@@ -260,7 +261,10 @@ def train_cnn_network():
     if epoch >= swa_start:
         print("[CNN] Updating SWA BatchNorm statistics …")
         update_bn(train_loader, swa_model, device=device)
-        swa_state = swa_model.state_dict()
+        # Strip 'module.' prefix so GUI can load without AveragedModel wrapper
+        swa_state = {k[len("module."):] if k.startswith("module.") else k: v
+                     for k, v in swa_model.state_dict().items()
+                     if k != "n_averaged"}
         torch.save({
             "state_dict": swa_state,
             "input_dim": input_dim,

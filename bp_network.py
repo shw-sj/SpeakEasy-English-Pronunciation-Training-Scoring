@@ -39,12 +39,12 @@ class ResidualBlock(nn.Module):
         layers: list[nn.Module] = [nn.Linear(in_features, out_features)]
         if use_batchnorm:
             layers.append(nn.BatchNorm1d(out_features))
-        layers.append(nn.ReLU())
+        layers.append(nn.SiLU())
         layers.append(nn.Dropout(dropout_rate))
         layers.append(nn.Linear(out_features, out_features))
         if use_batchnorm:
             layers.append(nn.BatchNorm1d(out_features))
-        layers.append(nn.ReLU())
+        layers.append(nn.SiLU())
         layers.append(nn.Dropout(dropout_rate))
         self.block = nn.Sequential(*layers)
 
@@ -98,6 +98,9 @@ class BPNetwork(nn.Module):
         self.use_batchnorm = use_batchnorm
         self.use_residual = use_residual
 
+        # ── Input feature dropout: light regularisation on raw features ──
+        self.input_dropout = nn.Dropout(0.1)
+
         # ── Shared base: input → 256 → 128 ──
         if use_residual:
             self.base = nn.Sequential(
@@ -134,6 +137,7 @@ class BPNetwork(nn.Module):
         self.task_specific = nn.Sequential(*head_layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.input_dropout(x)
         x = self.base(x)
         x = self.task_specific(x)
         return x

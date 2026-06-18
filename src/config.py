@@ -44,7 +44,7 @@ AUGMENT_SNR_DB = [10, 15, 20, 30]
 AUGMENT_SPEED_RANGE = (0.9, 1.1)
 AUGMENT_PITCH_SEMITONES = (-2, 2)
 AUGMENT_VOLUME_DB = (-3, 3)
-AUGMENT_FACTOR = 4  # target 3-5× expansion
+AUGMENT_FACTOR = 8  # target 8× expansion for better real-world robustness
 
 # ── Dataset split ──────────────────────────────────────────────────────────
 TRAIN_RATIO = 0.6

@@ -292,6 +292,54 @@ def save_swa_checkpoint(
 # ═══════════════════════════════════════════════════════════════════════
 #  Training loss helper (handles both hard and soft targets)
 # ═══════════════════════════════════════════════════════════════════════
+#  Feature-level augmentation
+# ═══════════════════════════════════════════════════════════════════════
+
+def freq_mask_features(
+    x: torch.Tensor,
+    freq_groups: int = 13,
+    mask_prob: float = 0.15,
+    mask_ratio: float = 0.3,
+) -> torch.Tensor:
+    """Randomly mask frequency bins in feature vectors during training.
+
+    For features organised as (B, input_dim) where input_dim % freq_groups == 0,
+    groups dimensions into freq_groups bins and randomly masks entire bins.
+    This simulates frequency-selective noise / microphone roll-off and
+    forces the model to use multiple frequency regions for classification.
+
+    Parameters
+    ----------
+    x : (B, D) float tensor.
+    freq_groups : int
+        Number of frequency bins (13 for mel-scale features).
+    mask_prob : float
+        Probability of masking any given frequency bin.
+    mask_ratio : float
+        Maximum fraction of bins to mask in a single sample.
+    """
+    if not (x.dim() == 2 and x.size(1) % freq_groups == 0):
+        return x  # can't group, skip
+    B, D = x.shape
+    ch_per_bin = D // freq_groups
+    x_reshaped = x.view(B, freq_groups, ch_per_bin)
+
+    max_mask = max(1, int(freq_groups * mask_ratio))
+    with torch.no_grad():
+        mask = torch.rand(B, freq_groups, device=x.device) < mask_prob
+        # Limit max number of masked bins per sample
+        for b in range(B):
+            idx = mask[b].nonzero(as_tuple=True)[0]
+            if len(idx) > max_mask:
+                keep = idx[torch.randperm(len(idx))[:max_mask]]
+                mask[b].fill_(False)
+                mask[b, keep] = True
+        mask = mask.unsqueeze(-1)  # (B, freq_groups, 1)
+    x_reshaped = x_reshaped.masked_fill(mask, 0.0)
+    return x_reshaped.view(B, D)
+
+
+# ═══════════════════════════════════════════════════════════════════════
 
 def compute_loss(
     logits: torch.Tensor,

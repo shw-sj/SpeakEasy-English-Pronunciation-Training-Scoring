@@ -29,7 +29,7 @@ class SEBlock(nn.Module):
             nn.AdaptiveAvgPool1d(1),
             nn.Flatten(),
             nn.Linear(channels, reduced),
-            nn.ReLU(inplace=True),
+            nn.SiLU(),
             nn.Linear(reduced, channels),
             nn.Sigmoid(),
         )
@@ -63,7 +63,7 @@ class ResidualConvBlock(nn.Module):
             nn.Conv1d(in_channels, out_channels, kernel_size,
                       stride=stride, padding=padding, bias=False),
             nn.BatchNorm1d(out_channels),
-            nn.ReLU(inplace=True),
+            nn.SiLU(),
             nn.Conv1d(out_channels, out_channels, kernel_size,
                       stride=1, padding=padding, bias=False),
             nn.BatchNorm1d(out_channels),
@@ -83,7 +83,7 @@ class ResidualConvBlock(nn.Module):
         else:
             self.shortcut = nn.Identity()
 
-        self.act = nn.ReLU(inplace=True)
+        self.act = nn.SiLU()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.act(self.branch(x) + self.shortcut(x))
@@ -182,7 +182,7 @@ class CNN1D(nn.Module):
                               stride=stride, padding=1, bias=False)
                 )
                 layers.append(nn.BatchNorm1d(out_ch))
-                layers.append(nn.ReLU(inplace=True))
+                layers.append(nn.SiLU())
                 if inter_dropout > 0:
                     layers.append(nn.Dropout1d(inter_dropout))
 
@@ -219,7 +219,7 @@ class CNN1D(nn.Module):
         self.classifier = nn.Sequential(
             nn.Linear(flat_dim, 128),
             norm_layer(128),
-            nn.ReLU(inplace=True),
+            nn.SiLU(),
             nn.Dropout(dropout_rate),
             nn.Linear(128, num_classes),
         )
@@ -275,10 +275,10 @@ class CNN1DLegacy(nn.Module):
         self.features = nn.Sequential(
             nn.Unflatten(1, (1, input_dim)),
             nn.Conv1d(1, 16, kernel_size=3, padding=1),
-            nn.ReLU(),
+            nn.SiLU(),
             nn.MaxPool1d(2),
             nn.Conv1d(16, 32, kernel_size=3, padding=1),
-            nn.ReLU(),
+            nn.SiLU(),
             nn.MaxPool1d(2),
             nn.Flatten(),
         )
@@ -288,7 +288,7 @@ class CNN1DLegacy(nn.Module):
 
         self.classifier = nn.Sequential(
             nn.Linear(flat_dim, 128),
-            nn.ReLU(),
+            nn.SiLU(),
             nn.Dropout(dropout_rate),
             nn.Linear(128, num_classes),
         )

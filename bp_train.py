@@ -2,9 +2,10 @@
 
 Improvements over baseline:
 - FocalLoss: focuses training on hard-to-classify letters (B/D, M/N, etc.)
-- CosineWarmRestarts: periodic LR resets help escape local minima
-- LR warmup: stable start avoids early runaway gradients
+- OneCycleLR: single-cycle cosine anneal for faster, better convergence
 - SWA (Stochastic Weight Averaging): flat-minima ensemble for better generalisation
+- SiLU activation: smoother gradients than ReLU
+- Input dropout + frequency masking for better robustness
 """
 
 from __future__ import annotations
@@ -30,10 +31,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 from audio_feature import feature_dim_rich
 from config import FEATURES_DIR
 from train_utils import (
-    CosineWarmRestarts,
     FocalLoss,
     add_gradient_noise,
     compute_loss,
+    freq_mask_features,
     mixup_batch as mixup_batch_new,
 )
 
@@ -42,8 +43,7 @@ matplotlib.rcParams["axes.unicode_minus"] = False
 
 
 INPUT_DIM = feature_dim_rich()  # 156-dim rich features
-LR = 1e-3
-LR_MIN = 1e-6
+MAX_LR = 5e-3
 WEIGHT_DECAY = 5e-3
 DROPOUT_RATE = 0.4
 CLIP_GRAD = 3.0
@@ -59,10 +59,9 @@ GRAD_NOISE_STD = 0.001
 # ── Focal Loss ──
 FOCAL_GAMMA = 2.0
 
-# ── LR schedule ──
-WARMUP_EPOCHS = 5
-COSINE_T0 = 30
-COSINE_TMULT = 2
+# ── OneCycleLR ──
+ONECYCLE_PCT_START = 0.3
+ONECYCLE_FINAL_DIV = 1e4
 
 # ── SWA ──
 SWA_START = 100  # epoch to start averaging
@@ -125,17 +124,18 @@ def train_bp_network() -> None:
     criterion = FocalLoss(gamma=FOCAL_GAMMA, label_smoothing=LABEL_SMOOTHING)
     val_criterion = nn.CrossEntropyLoss()
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=LR,
+    optimizer = torch.optim.AdamW(model.parameters(), lr=MAX_LR,
                                   weight_decay=WEIGHT_DECAY)
     train_loader = make_loader(x_train, y_train, BATCH_SIZE, shuffle=True)
     val_x = torch.as_tensor(x_val, dtype=torch.float32, device=device)
     val_y = torch.as_tensor(y_val, dtype=torch.long, device=device)
 
-    # ── LR schedule with warm restarts ──
-    lr_schedule = CosineWarmRestarts(
-        base_lr=LR, min_lr=LR_MIN,
-        T_0=COSINE_T0, T_mult=COSINE_TMULT,
-        warmup_epochs=WARMUP_EPOCHS,
+    # ── OneCycleLR: warmup 30% → peak → cosine anneal to ~0 ──
+    total_steps = EPOCHS * len(train_loader)
+    lr_schedule = torch.optim.lr_scheduler.OneCycleLR(
+        optimizer, max_lr=MAX_LR, total_steps=total_steps,
+        pct_start=ONECYCLE_PCT_START, anneal_strategy="cos",
+        final_div_factor=ONECYCLE_FINAL_DIV,
     )
 
     # ── SWA for better generalisation ──
@@ -163,16 +163,12 @@ def train_bp_network() -> None:
     print(f"[BP] FocalLoss γ={FOCAL_GAMMA} | label_smoothing={LABEL_SMOOTHING} | "
           f"mixup_alpha={MIXUP_ALPHA}")
     print(f"[BP] dropout={DROPOUT_RATE} | weight_decay={WEIGHT_DECAY}")
-    print(f"[BP] CosineWarmRestarts T0={COSINE_T0} Tmult={COSINE_TMULT} "
-          f"warmup={WARMUP_EPOCHS}")
+    print(f"[BP] OneCycleLR max_lr={MAX_LR} pct_start={ONECYCLE_PCT_START} "
+          f"final_div={ONECYCLE_FINAL_DIV}")
     print(f"[BP] SWA start={SWA_START} swa_lr={SWA_LR}")
     print("=" * 72)
 
     for epoch in range(1, EPOCHS + 1):
-        current_lr = lr_schedule.get_lr(epoch)
-        for group in optimizer.param_groups:
-            group["lr"] = current_lr
-
         model.train()
         total_loss = 0.0
         total_seen = 0
@@ -182,6 +178,9 @@ def train_bp_network() -> None:
 
             batch_x, batch_y_mixed = mixup_batch_new(
                 batch_x, batch_y, MIXUP_ALPHA, output_dim)
+
+            # Frequency-bin masking: forces model to use diverse frequency regions
+            batch_x = freq_mask_features(batch_x, freq_groups=13)
 
             optimizer.zero_grad(set_to_none=True)
             logits = model(batch_x)
@@ -194,6 +193,7 @@ def train_bp_network() -> None:
 
             nn.utils.clip_grad_norm_(model.parameters(), CLIP_GRAD)
             optimizer.step()
+            lr_schedule.step()  # per-batch LR update
             total_loss += float(loss.item()) * len(batch_x)
             total_seen += len(batch_x)
 
@@ -216,6 +216,7 @@ def train_bp_network() -> None:
 
         if epoch == 1 or epoch % 10 == 0:
             swa_tag = " [SWA]" if epoch >= SWA_START else ""
+            current_lr = optimizer.param_groups[0]["lr"]
             print(
                 f"[BP] Epoch {epoch:03d}/{EPOCHS} | lr={current_lr:.6f} | "
                 f"train_loss={train_loss:.4f} | val_loss={val_loss:.4f} | "
@@ -249,7 +250,10 @@ def train_bp_network() -> None:
     if epoch >= SWA_START:
         print("[BP] Updating SWA BatchNorm statistics …")
         update_bn(train_loader, swa_model, device=device)
-        swa_state = swa_model.state_dict()
+        # Strip 'module.' prefix so GUI can load without AveragedModel wrapper
+        swa_state = {k[len("module."):] if k.startswith("module.") else k: v
+                     for k, v in swa_model.state_dict().items()
+                     if k != "n_averaged"}
         torch.save(
             {
                 "state_dict": swa_state,

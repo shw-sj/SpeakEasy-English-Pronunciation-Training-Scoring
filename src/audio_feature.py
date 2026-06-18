@@ -196,7 +196,7 @@ def extract_features(
     sr: int = SAMPLE_RATE,
     n_mfcc: int = N_MFCC,
     preprocess: bool = True,
-    rich: bool = False,
+    rich: bool = True,
 ) -> np.ndarray:
     """End-to-end feature extraction from raw audio.
 
@@ -204,7 +204,7 @@ def extract_features(
     ----------
     rich : bool
         If True, use richer aggregation (4 stats → 156 dims).
-        Default False for backward compatibility.
+        Default True (156-dim rich features).
     """
     if preprocess:
         audio = preprocess_audio(audio, sr)

@@ -66,6 +66,7 @@ class PredictionResult:
     score: int
     labels: list[str]
     probabilities: np.ndarray
+    embedding: np.ndarray | None = None  # v2: 128-dim pronunciation embedding
 
 
 def display_label(label: str) -> str:
@@ -256,8 +257,13 @@ class ModelManager:
             model = BPNetwork(input_size=input_dim, output_size=output_dim,
                               dropout_rate=float(data.get("dropout_rate", 0.0))).to(self.device)
         else:
+            # 读取 CNN 架构参数，确保与训练时一致
+            channels = data.get("channels", (32, 64, 128, 256))
+            freq_groups = data.get("freq_groups", None)
             model = CNN1D(input_dim=input_dim, num_classes=output_dim,
-                          dropout_rate=float(data.get("dropout_rate", 0.3))).to(self.device)
+                          dropout_rate=float(data.get("dropout_rate", 0.3)),
+                          channels=tuple(channels),
+                          freq_groups=freq_groups).to(self.device)
         model.load_state_dict(data["state_dict"])
         model.eval()
         loaded = (model, labels, mean, std)
@@ -276,18 +282,93 @@ class ModelManager:
                                     int(round(probs[idx] * 100)), bp.labels, probs)
         return self._predict_one(model_name, dataset, feature)
 
-    def _predict_one(self, model_name: str, dataset: str, feature: np.ndarray) -> PredictionResult:
+    def _predict_one(self, model_name: str, dataset: str, feature: np.ndarray,
+                     return_embedding: bool = False) -> PredictionResult:
         model, labels, mean, std = self.load(model_name, dataset)
         x = feature.astype(np.float32)
         if mean is not None and std is not None:
             x = (x - mean) / (std + 1e-8)
         x_tensor = torch.as_tensor(x[None, :], dtype=torch.float32, device=self.device)
         with torch.no_grad():
-            logits = model(x_tensor)
+            if return_embedding:
+                logits, embedding = model(x_tensor, return_embedding=True)
+                embedding = embedding.cpu().numpy()[0]  # (128,)
+            else:
+                logits = model(x_tensor)
+                embedding = None
             probs = torch.softmax(logits, dim=1).cpu().numpy()[0]
         idx = int(np.argmax(probs))
         return PredictionResult(labels[idx], float(probs[idx]),
-                                int(round(probs[idx] * 100)), labels, probs)
+                                int(round(probs[idx] * 100)), labels, probs,
+                                embedding=embedding)
+
+    def predict_with_embedding(self, model_name: str, dataset: str,
+                                feature: np.ndarray) -> PredictionResult:
+        """预测并返回 128 维发音嵌入向量 (v2)。
+
+        与 predict() 相同，但额外在 PredictionResult.embedding 中
+        包含倒数第二层的嵌入，用于 ``EmbeddingScorer``。
+        """
+        if model_name == "融合模型":
+            bp = self._predict_one("BP", dataset, feature, return_embedding=True)
+            cnn = self._predict_one("CNN", dataset, feature, return_embedding=True)
+            if bp.labels != cnn.labels:
+                return cnn
+            # 融合：概率和嵌入都取平均
+            probs = (bp.probabilities + cnn.probabilities) / 2
+            idx = int(np.argmax(probs))
+            emb = (bp.embedding + cnn.embedding) / 2 if (
+                bp.embedding is not None and cnn.embedding is not None
+            ) else None
+            return PredictionResult(bp.labels[idx], float(probs[idx]),
+                                    int(round(probs[idx] * 100)), bp.labels, probs,
+                                    embedding=emb)
+        return self._predict_one(model_name, dataset, feature, return_embedding=True)
+
+    def compute_standard_embeddings(self, model_name: str, dataset: str,
+                                     standard_audio_dir: Path | None = None
+                                     ) -> dict[str, np.ndarray]:
+        """预计算所有字母的标准发音嵌入 (v2)。
+
+        对每个字母，通过 TTS 标准音频 → 提取特征 → 模型前向传播，
+        得到 128 维嵌入向量，用于 EmbeddingScorer。
+
+        Parameters
+        ----------
+        model_name : str
+            "BP", "CNN" 或 "融合模型"。
+        dataset : str
+            数据集名称。
+        standard_audio_dir : Path or None
+            标准音频目录，默认使用 TEMPLATES_DIR / "gui_standard"。
+
+        Returns
+        -------
+        standard_embeddings : dict[str, np.ndarray]
+            {label: np.array(128,)} 每个字母的标准嵌入。
+        """
+        from audio_feature import extract_features
+
+        if standard_audio_dir is None:
+            standard_audio_dir = TEMPLATES_DIR / "gui_standard"
+
+        standard_embeddings: dict[str, np.ndarray] = {}
+        for wav_path in sorted(standard_audio_dir.glob("*.wav")):
+            # 从文件名推断标签（如 "a.wav" → "A"）
+            label = wav_path.stem.upper()
+            if len(label) == 1 and label.isalpha():
+                try:
+                    audio, sr = load_audio(str(wav_path), SAMPLE_RATE)
+                    feature = extract_features(audio, sr)
+                    result = self.predict_with_embedding(
+                        model_name, dataset, feature
+                    )
+                    if result.embedding is not None:
+                        standard_embeddings[label] = result.embedding
+                except Exception:
+                    continue
+
+        return standard_embeddings
 
 
 class StandardSpeech:

@@ -2,19 +2,26 @@
 发音智能评测打分模块 —— 三维度融合评分（核心创新）
 ====================================================
 综合三种打分策略，加权融合得出最终评分（0-100分）：
-  1. 置信度打分（权重40%）—— 基于BP网络Softmax输出概率
-  2. DTW对齐距离打分（权重35%）—— 动态时间规整用户MFCC与标准模板对齐
+  1. 嵌入相似度打分（权重45%）—— 基于CNN/BP倒数第二层128维嵌入的余弦相似度
+  2. DTW对齐距离打分（权重30%）—— 动态时间规整用户MFCC与标准模板对齐
   3. 声学特征相似度打分（权重25%）—— F0基频 + 共振峰 + 能量包络
 
-最终得分 = 0.4 × score_conf + 0.35 × score_dtw + 0.25 × score_acoustic
+最终得分 = 0.45 × score_emb + 0.30 × score_dtw + 0.25 × score_acoustic
 
 使用方式：
   from pronunciation_scorer import PronunciationScorer, ScoreResult
   scorer = PronunciationScorer()
-  result = scorer.score(probs, target_idx,
+  result = scorer.score(user_embedding, target_embedding,
                          user_mfcc_seq=user_seq, template_mfcc_seq=ref_seq,
                          user_audio=user_wav, template_audio=ref_wav)
   print(result.total_score, result.grade, result.star_rating)
+
+v2 变更：
+  - 新增 EmbeddingScorer：用神经网络学到的语音嵌入余弦相似度
+    替代原来的 softmax 置信度，从根本上解决 CNN 分类目标
+    与发音质量评估任务之间的错配。
+  - 保留 ConfidenceScorer 作为向后兼容的回退方案。
+  - 支持通过 scorer.use_embedding_scorer 切换模式。
 """
 
 import numpy as np
@@ -94,6 +101,155 @@ class ConfidenceScorer:
             label = label_map.get(idx, str(idx)) if label_map else str(idx)
             results.append((label, float(probs[idx])))
         return results
+
+
+# ====================================================================
+# 第二部分：嵌入相似度打分（权重40%） ★v2 核心创新★
+# ====================================================================
+class EmbeddingScorer:
+    """嵌入相似度打分器 —— 解决 CNN 分类目标与发音质量评估的错配。
+
+    核心思路：
+      不用 softmax 置信度（"模型有多确定这是字母X"），
+      而是用 CNN/BP 倒数第二层的 128 维嵌入向量，
+      计算用户发音嵌入与标准发音嵌入的余弦相似度。
+
+    直觉：
+      - 发音越标准，嵌入向量越靠近该字母的"理想嵌入"
+      - 发音走样，嵌入会偏离理想位置
+      - 这直接度量了"发音有多接近标准"，而非"分类有多确定"
+
+    Attributes
+    ----------
+    standard_embeddings : dict
+        {letter: np.ndarray(128,)} 每个字母的标准发音嵌入。
+        通过将 TTS 标准音频送入模型提取嵌入得到。
+    similarity_mode : str
+        "cosine" — 余弦相似度
+        "euclidean" — 欧氏距离映射
+    """
+
+    def __init__(
+        self,
+        standard_embeddings: dict | None = None,
+        similarity_mode: str = "cosine",
+        euclidean_scale: float = 0.05,
+    ):
+        """
+        Parameters
+        ----------
+        standard_embeddings : dict or None
+            预计算的标准嵌入 {label: np.array(128,)}。
+            如果为 None，需要后续调用 ``set_standards()``。
+        similarity_mode : str
+            "cosine" 或 "euclidean"。
+        euclidean_scale : float
+            欧氏距离映射到 [0,100] 的缩放系数。
+            score = max(0, 100 - euclidean_scale * dist)。
+        """
+        self.standard_embeddings = standard_embeddings or {}
+        self.similarity_mode = similarity_mode
+        self.euclidean_scale = euclidean_scale
+
+    def set_standards(self, standard_embeddings: dict) -> None:
+        """设置或更新标准嵌入字典。
+
+        Parameters
+        ----------
+        standard_embeddings : dict
+            {label: np.array(128,)} 映射。
+        """
+        self.standard_embeddings = standard_embeddings
+
+    def score(
+        self,
+        user_embedding: np.ndarray,
+        target_label,
+    ) -> float:
+        """计算嵌入相似度评分。
+
+        Parameters
+        ----------
+        user_embedding : np.ndarray
+            用户音频的 128 维嵌入向量，shape=(128,) 或 (1, 128)。
+        target_label : str or int
+            目标字母（如 "A" 或 0），用于查找标准嵌入。
+
+        Returns
+        -------
+        score : float  [0, 100]
+        """
+        user_emb = np.array(user_embedding, dtype=np.float64).flatten()
+
+        if target_label not in self.standard_embeddings:
+            # 回退：如果没有标准嵌入，返回 50 分（中性）
+            return 50.0
+
+        std_emb = np.array(
+            self.standard_embeddings[target_label], dtype=np.float64
+        ).flatten()
+
+        if self.similarity_mode == "cosine":
+            dot = np.dot(user_emb, std_emb)
+            norm = (
+                np.linalg.norm(user_emb) * np.linalg.norm(std_emb) + 1e-10
+            )
+            cosine_sim = dot / norm
+            # 余弦相似度 [-1, 1] → [0, 100]
+            # cos=1 → 100分, cos=0 → 50分, cos=-1 → 0分
+            score = (cosine_sim + 1.0) / 2.0 * 100.0
+        elif self.similarity_mode == "euclidean":
+            dist = np.linalg.norm(user_emb - std_emb)
+            score = max(0.0, 100.0 - self.euclidean_scale * dist)
+        else:
+            raise ValueError(f"未知相似度模式: {self.similarity_mode}")
+
+        return float(np.clip(score, 0.0, 100.0))
+
+    def score_batch(
+        self,
+        user_embeddings: np.ndarray,
+        target_labels: list,
+    ) -> np.ndarray:
+        """批量评分。
+
+        Parameters
+        ----------
+        user_embeddings : (N, 128)
+        target_labels : list of str/int, length N
+
+        Returns
+        -------
+        scores : (N,) float
+        """
+        return np.array([
+            self.score(user_embeddings[i], target_labels[i])
+            for i in range(len(target_labels))
+        ])
+
+    def get_topk_similar(
+        self,
+        user_embedding: np.ndarray,
+        k: int = 5,
+    ) -> list[tuple[str, float]]:
+        """找到与用户嵌入最相似的 k 个标准嵌入（用于详细反馈）。
+
+        Returns
+        -------
+        [(label, similarity_score), ...] 按相似度降序排列。
+        """
+        user_emb = np.array(user_embedding, dtype=np.float64).flatten()
+        results = []
+        for label, std_emb in self.standard_embeddings.items():
+            std = np.array(std_emb, dtype=np.float64).flatten()
+            dot = np.dot(user_emb, std)
+            norm = (
+                np.linalg.norm(user_emb) * np.linalg.norm(std) + 1e-10
+            )
+            sim = float((dot / norm + 1.0) / 2.0 * 100.0)
+            results.append((str(label), sim))
+        results.sort(key=lambda x: x[1], reverse=True)
+        return results[:k]
 
 
 # ====================================================================
@@ -493,7 +649,7 @@ class PronunciationScorer:
       - DTW对齐打分（权重35%）：MFCC序列DTW规整距离
       - 声学特征打分（权重25%）：F0+共振峰+能量包络相似度
 
-    最终得分 = 0.40 × conf + 0.35 × dtw + 0.25 × acoustic
+    最终得分 = 0.45 × first + 0.30 × dtw + 0.25 × acoustic
 
     评分等级：
       90-100分：优秀 ★★★★★
@@ -502,39 +658,59 @@ class PronunciationScorer:
       0-59分  ：需努力 ★★☆☆☆
     """
 
-    def __init__(self, conf_weight=0.40, dtw_weight=0.35, acoustic_weight=0.25,
-                 sample_rate=16000, dtw_alpha=1.0):
-        total = conf_weight + dtw_weight + acoustic_weight
-        self.conf_weight = conf_weight / total
+    def __init__(self, emb_weight=0.45, dtw_weight=0.30, acoustic_weight=0.25,
+                 sample_rate=16000, dtw_alpha=1.0,
+                 use_embedding=True, standard_embeddings=None):
+        total = emb_weight + dtw_weight + acoustic_weight
+        self.emb_weight = emb_weight / total
         self.dtw_weight = dtw_weight / total
         self.acoustic_weight = acoustic_weight / total
         self.sample_rate = sample_rate
+        self.use_embedding = use_embedding
 
+        # v2: 嵌入打分器（默认，解决分类目标与质量评估的错配）
+        self.emb_scorer = EmbeddingScorer(standard_embeddings=standard_embeddings)
+        # v1: 置信度打分器（回退）
         self.conf_scorer = ConfidenceScorer()
         self.dtw_scorer = DTWScorer(alpha=dtw_alpha)
         self.acoustic_scorer = AcousticScorer(sample_rate=sample_rate)
 
-    # ==================== 综合评分主接口 ====================
-    def score(self, softmax_probs, target_class_idx,
+    # ==================== 综合评分主接口 (v2) ====================
+    def score(self, softmax_probs=None, target_class_idx=None,
+              user_embedding=None, target_label=None,
               user_mfcc_seq=None, template_mfcc_seq=None,
               user_audio=None, template_audio=None):
         """
-        综合评分（主入口）
+        综合评分（主入口，v2：支持嵌入相似度）。
 
-        必须参数：
-          softmax_probs    — 神经网络Softmax输出概率向量 [n_classes]
-          target_class_idx — 目标类别索引 (int)
+        两种调用方式（向后兼容）：
 
-        可选参数（不传则对应维度使用默认50分）：
-          user_mfcc_seq     — 用户MFCC序列 [n_frames, n_features]
-          template_mfcc_seq — 标准模板MFCC序列 [n_frames, n_features]
-          user_audio        — 用户原始音频信号 (1D array)
-          template_audio    — 标准发音音频信号 (1D array)
+        1. **嵌入模式** (v2 推荐，默认):
+           scorer.score(user_embedding=emb, target_label="A",
+                        user_mfcc_seq=..., template_mfcc_seq=...,
+                        user_audio=..., template_audio=...)
+
+        2. **置信度模式** (v1 回退):
+           scorer.score(softmax_probs=probs, target_class_idx=0,
+                        user_mfcc_seq=..., template_mfcc_seq=...,
+                        user_audio=..., template_audio=...)
 
         :return: ScoreResult 命名元组
         """
-        # 1. 置信度评分
-        score_conf = self.conf_scorer.score(softmax_probs, target_class_idx)
+        # 1. 嵌入/置信度评分
+        if self.use_embedding and user_embedding is not None and target_label is not None:
+            score_first = self.emb_scorer.score(user_embedding, target_label)
+            first_name = "emb"
+        elif softmax_probs is not None and target_class_idx is not None:
+            score_first = self.conf_scorer.score(softmax_probs, target_class_idx)
+            first_name = "conf"
+        else:
+            score_first = 50.0
+            first_name = "conf"
+            if self.use_embedding:
+                warnings.warn(
+                    "嵌入模式已启用但未提供 user_embedding/target_label，"
+                    "第一维度使用默认值50分")
 
         # 2. DTW评分
         if user_mfcc_seq is not None and template_mfcc_seq is not None:
@@ -552,7 +728,7 @@ class PronunciationScorer:
             warnings.warn("未提供音频信号，声学评分使用默认值50分")
 
         # 4. 加权融合
-        total = (self.conf_weight * score_conf +
+        total = (self.emb_weight * score_first +
                  self.dtw_weight * score_dtw +
                  self.acoustic_weight * score_acoustic)
         total = np.clip(total, 0.0, 100.0)
@@ -562,25 +738,35 @@ class PronunciationScorer:
 
         return ScoreResult(
             total_score=round(total, 2),
-            conf_score=round(score_conf, 2),
+            conf_score=round(score_first, 2),
             dtw_score=round(score_dtw, 2),
             acoustic_score=round(score_acoustic, 2),
             grade=grade,
             star_rating=star,
             detail={
-                "conf_score": round(score_conf, 2),
+                f"{first_name}_score": round(score_first, 2),
                 "dtw_score": round(score_dtw, 2),
                 "acoustic_score": round(score_acoustic, 2),
-                "weights": {"conf": round(self.conf_weight, 3),
+                "weights": {first_name: round(self.emb_weight, 3),
                             "dtw": round(self.dtw_weight, 3),
                             "acoustic": round(self.acoustic_weight, 3)},
+                "scoring_mode": "embedding" if first_name == "emb" else "confidence",
                 "grade": grade,
             },
         )
 
-    # ==================== 仅置信度评分（快速模式） ====================
+    # ==================== 仅嵌入/置信度评分（快速模式） ====================
+    def score_embedding_only(self, user_embedding, target_label):
+        """快速模式：仅使用嵌入相似度评分 (v2)"""
+        sc = self.emb_scorer.score(user_embedding, target_label)
+        grade, star = self._get_grade(sc)
+        return ScoreResult(total_score=round(sc, 2), conf_score=round(sc, 2),
+                           dtw_score=0.0, acoustic_score=0.0,
+                           grade=grade, star_rating=star,
+                           detail={"mode": "embedding_only"})
+
     def score_confidence_only(self, softmax_probs, target_class_idx):
-        """快速模式：仅使用置信度评分"""
+        """快速模式：仅使用置信度评分 (v1 回退)"""
         sc = self.conf_scorer.score(softmax_probs, target_class_idx)
         grade, star = self._get_grade(sc)
         return ScoreResult(total_score=round(sc, 2), conf_score=round(sc, 2),
@@ -588,28 +774,39 @@ class PronunciationScorer:
                            grade=grade, star_rating=star,
                            detail={"mode": "confidence_only"})
 
-    # ==================== 完整详细评分 ====================
-    def score_detailed(self, softmax_probs, target_class_idx,
-                       user_mfcc_seq, template_mfcc_seq,
-                       user_audio, template_audio):
+    # ==================== 完整详细评分 (v2) ====================
+    def score_detailed(self, softmax_probs=None, target_class_idx=None,
+                       user_embedding=None, target_label=None,
+                       user_mfcc_seq=None, template_mfcc_seq=None,
+                       user_audio=None, template_audio=None):
         """完整评分（含所有子维度详细信息）"""
-        result = self.score(softmax_probs, target_class_idx,
-                            user_mfcc_seq, template_mfcc_seq,
-                            user_audio, template_audio)
+        result = self.score(softmax_probs=softmax_probs,
+                            target_class_idx=target_class_idx,
+                            user_embedding=user_embedding,
+                            target_label=target_label,
+                            user_mfcc_seq=user_mfcc_seq,
+                            template_mfcc_seq=template_mfcc_seq,
+                            user_audio=user_audio,
+                            template_audio=template_audio)
         detail = dict(result.detail)
 
-        # 置信度Top-5
-        detail["conf_top5"] = self.conf_scorer.get_topk_info(softmax_probs, k=5)
+        # 嵌入Top-5 或 置信度Top-5
+        if detail.get("scoring_mode") == "embedding" and user_embedding is not None:
+            detail["emb_top5"] = self.emb_scorer.get_topk_similar(user_embedding, k=5)
+        elif softmax_probs is not None:
+            detail["conf_top5"] = self.conf_scorer.get_topk_info(softmax_probs, k=5)
 
         # DTW详细信息
-        dtw_result = self.dtw_scorer.compute(user_mfcc_seq, template_mfcc_seq)
-        detail["dtw_avg_distance"] = round(dtw_result["avg_distance"], 6)
-        detail["dtw_path_length"] = len(dtw_result["warping_path"])
+        if user_mfcc_seq is not None and template_mfcc_seq is not None:
+            dtw_result = self.dtw_scorer.compute(user_mfcc_seq, template_mfcc_seq)
+            detail["dtw_avg_distance"] = round(dtw_result["avg_distance"], 6)
+            detail["dtw_path_length"] = len(dtw_result["warping_path"])
 
         # 声学详细信息
-        acoustic_detail = self.acoustic_scorer.compute_detailed_similarity(
-            user_audio, template_audio)
-        detail.update(acoustic_detail)
+        if user_audio is not None and template_audio is not None:
+            acoustic_detail = self.acoustic_scorer.compute_detailed_similarity(
+                user_audio, template_audio)
+            detail.update(acoustic_detail)
 
         return ScoreResult(
             total_score=result.total_score, conf_score=result.conf_score,
@@ -629,24 +826,30 @@ class PronunciationScorer:
             return "需努力 (Try Again!)", "★★☆☆☆"
 
     # ==================== 权重调整 ====================
-    def set_weights(self, conf_w, dtw_w, acoustic_w):
+    def set_weights(self, first_w, dtw_w, acoustic_w):
         """动态调整三维度权重"""
-        total = conf_w + dtw_w + acoustic_w
-        self.conf_weight = conf_w / total
+        total = first_w + dtw_w + acoustic_w
+        self.emb_weight = first_w / total
         self.dtw_weight = dtw_w / total
         self.acoustic_weight = acoustic_w / total
+
+    # ==================== 标准嵌入管理 (v2) ====================
+    def set_standard_embeddings(self, standard_embeddings: dict) -> None:
+        """设置标准发音嵌入字典。{label: np.array(128,)} """
+        self.emb_scorer.set_standards(standard_embeddings)
 
     # ==================== 配置信息 ====================
     def get_info(self):
         """返回当前评分器配置"""
         return {
-            "weights": {"confidence": round(self.conf_weight, 3),
+            "scoring_mode": "embedding" if self.use_embedding else "confidence",
+            "weights": {"first_dim": round(self.emb_weight, 3),
                         "dtw": round(self.dtw_weight, 3),
                         "acoustic": round(self.acoustic_weight, 3)},
             "dtw_alpha": self.dtw_scorer.alpha,
             "sample_rate": self.sample_rate,
-            "formula": "total = {:.0%}*conf + {:.0%}*dtw + {:.0%}*acoustic".format(
-                self.conf_weight, self.dtw_weight, self.acoustic_weight),
+            "formula": "total = {:.0%}*first + {:.0%}*dtw + {:.0%}*acoustic".format(
+                self.emb_weight, self.dtw_weight, self.acoustic_weight),
         }
 
 
@@ -699,16 +902,24 @@ def optimize_weights(human_scores, conf_scores, dtw_scores, acoustic_scores,
 # ====================================================================
 if __name__ == "__main__":
     print("=" * 60)
-    print("发音智能评测打分模块 —— 三维度融合评分测试")
+    print("发音智能评测打分模块 —— 三维度融合评分测试 (v2)")
     print("=" * 60)
     np.random.seed(42)
 
     # 模拟数据
     n_classes = 26
     target_idx = 0
+    target_label = "A"
     probs = np.ones(n_classes) * 0.01
     probs[target_idx] = 0.75
     probs = probs / probs.sum()
+
+    # 模拟128维嵌入
+    user_embedding = np.random.randn(128).astype(np.float64)
+    user_embedding /= np.linalg.norm(user_embedding)
+    standard_embedding = user_embedding + np.random.randn(128) * 0.3
+    standard_embedding /= np.linalg.norm(standard_embedding)
+    standard_embeddings = {"A": standard_embedding}
 
     user_mfcc = np.random.randn(35, 13) * 0.3
     template_mfcc = np.random.randn(30, 13) * 0.3
@@ -717,44 +928,53 @@ if __name__ == "__main__":
     user_audio = np.sin(2 * np.pi * 200 * np.arange(0, 1.5, 1/sr))
     template_audio = np.sin(2 * np.pi * 200 * np.arange(0, 1.5, 1/sr))
 
-    # 测试1：完整评分
-    print("\n[测试1] 完整三维度评分")
-    scorer = PronunciationScorer()
-    result = scorer.score(probs, target_idx,
+    # 测试1：嵌入模式完整评分 (v2 默认)
+    print("\n[测试1] 嵌入相似度 + DTW + 声学 三维度融合评分 (v2)")
+    scorer = PronunciationScorer(use_embedding=True,
+                                 standard_embeddings=standard_embeddings)
+    result = scorer.score(user_embedding=user_embedding, target_label=target_label,
                           user_mfcc_seq=user_mfcc, template_mfcc_seq=template_mfcc,
                           user_audio=user_audio, template_audio=template_audio)
     print(f"  综合评分: {result.total_score:.2f} / 100")
-    print(f"  置信度: {result.conf_score:.2f} | DTW: {result.dtw_score:.2f} | "
+    print(f"  嵌入相似度: {result.conf_score:.2f} | DTW: {result.dtw_score:.2f} | "
           f"声学: {result.acoustic_score:.2f}")
+    print(f"  评分模式: {result.detail.get('scoring_mode', 'N/A')}")
     print(f"  评级: {result.grade} | 星级: {result.star_rating}")
 
-    # 测试2：快速模式
-    print("\n[测试2] 仅置信度评分（快速模式）")
-    r2 = scorer.score_confidence_only(probs, target_idx)
-    print(f"  评分: {r2.total_score:.2f} → {r2.grade}")
+    # 测试2：置信度回退模式 (v1)
+    print("\n[测试2] 置信度 + DTW + 声学 三维度融合评分 (v1 回退)")
+    scorer_v1 = PronunciationScorer(use_embedding=False)
+    result_v1 = scorer_v1.score(softmax_probs=probs, target_class_idx=target_idx,
+                                user_mfcc_seq=user_mfcc, template_mfcc_seq=template_mfcc,
+                                user_audio=user_audio, template_audio=template_audio)
+    print(f"  综合评分: {result_v1.total_score:.2f} / 100")
+    print(f"  置信度: {result_v1.conf_score:.2f} | DTW: {result_v1.dtw_score:.2f} | "
+          f"声学: {result_v1.acoustic_score:.2f}")
 
-    # 测试3：详细评分
-    print("\n[测试3] 完整详细评分")
-    r3 = scorer.score_detailed(probs, target_idx,
-                               user_mfcc, template_mfcc,
-                               user_audio, template_audio)
-    for k, v in r3.detail.items():
-        if not isinstance(v, (list, dict)):
-            print(f"  {k}: {v}")
+    # 测试3：仅嵌入评分（快速模式）
+    print("\n[测试3] 仅嵌入相似度评分（快速模式 v2）")
+    r3 = scorer.score_embedding_only(user_embedding, target_label)
+    print(f"  评分: {r3.total_score:.2f} → {r3.grade}")
 
-    # 测试4：权重优化
-    print("\n[测试4] 权重网格搜索优化")
+    # 测试4：嵌入相似度 Top-K
+    print("\n[测试4] 嵌入相似度 Top-K")
+    topk = scorer.emb_scorer.get_topk_similar(user_embedding, k=3)
+    for label, sim in topk:
+        print(f"  {label}: {sim:.2f}")
+
+    # 测试5：权重优化（与维度无关）
+    print("\n[测试5] 权重网格搜索优化")
     n = 50
     hs = np.random.uniform(40, 95, n)
-    cs = hs + np.random.randn(n) * 8
+    fs = hs + np.random.randn(n) * 8  # first-dim scores (emb or conf)
     ds = hs + np.random.randn(n) * 10
     as_ = hs + np.random.randn(n) * 12
-    bw, bc, _ = optimize_weights(hs, cs, ds, as_)
-    print(f"  最优权重: conf={bw[0]:.3f}, dtw={bw[1]:.3f}, acoustic={bw[2]:.3f}")
+    bw, bc, _ = optimize_weights(hs, fs, ds, as_)
+    print(f"  最优权重: first={bw[0]:.3f}, dtw={bw[1]:.3f}, acoustic={bw[2]:.3f}")
     print(f"  Pearson r = {bc:.4f}")
 
-    # 测试5：DTW alpha校准
-    print("\n[测试5] DTW alpha校准")
+    # 测试6：DTW alpha校准
+    print("\n[测试6] DTW alpha校准")
     good = [template_mfcc + np.random.randn(30, 13) * 0.1 for _ in range(10)]
     bad = [template_mfcc + np.random.randn(30, 13) * 2.0 for _ in range(10)]
     tmps = [template_mfcc for _ in range(10)]

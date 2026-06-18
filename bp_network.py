@@ -136,11 +136,39 @@ class BPNetwork(nn.Module):
         head_layers.append(nn.Linear(128, output_size))
         self.task_specific = nn.Sequential(*head_layers)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, return_embedding: bool = False):
+        """Forward pass.
+
+        Parameters
+        ----------
+        x : (B, input_size)
+        return_embedding : bool
+            If True, also returns the 128-dim penultimate embedding
+            from the second-to-last layer, usable for pronunciation
+            quality assessment via embedding similarity.
+
+        Returns
+        -------
+        logits : (B, output_size)
+        embedding : (B, 128), only if ``return_embedding=True``
+        """
         x = self.input_dropout(x)
-        x = self.base(x)
-        x = self.task_specific(x)
-        return x
+        x = self.base(x)  # (B, 128) shared representation
+        # Walk task_specific until we reach the final Linear layer
+        # task_specific is always built as:
+        #   Linear(128→256) → [BN] → ReLU → Dropout → Linear(256→128) → [BN] → ReLU → Dropout → Linear(128→output)
+        # We intercept after the second-to-last Linear (the one that outputs 128).
+        h = x
+        embedding = h  # fallback: use base output if task_specific is empty
+        for i, layer in enumerate(self.task_specific):
+            h = layer(h)
+            # Intercept after the 128-dim Linear layer (second-to-last Linear)
+            if isinstance(layer, nn.Linear) and layer.out_features == 128:
+                embedding = h
+        logits = h
+        if return_embedding:
+            return logits, embedding
+        return logits
 
 # ═══════════════════════════════════════════════════════════════════════
 #  Convenience alias

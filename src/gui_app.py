@@ -33,7 +33,8 @@ class SpeakEasyWindow(QMainWindow):
 
         self.model_manager = ModelManager()
         self.standard = StandardSpeech()
-        self.pron_scorer = PronunciationScorer()
+        self.pron_scorer = PronunciationScorer(use_embedding=True)
+        self.cnn_standard_embeddings: dict[str, np.ndarray] = {}
         self.history: list[dict] = []
         self.current_audio = np.array([], dtype=np.float32)
         self.current_standard: np.ndarray | None = None
@@ -52,6 +53,8 @@ class SpeakEasyWindow(QMainWindow):
         self.build_ui()
         self._apply_scaled_style(1.0)
         self.update_prompt()
+        # v2: 延迟加载标准嵌入，避免阻塞 UI 启动
+        QTimer.singleShot(500, self._init_standard_embeddings)
 
     # ── build_ui ──────────────────────────────────────
 
@@ -367,6 +370,44 @@ class SpeakEasyWindow(QMainWindow):
     def target_text(self) -> str | None:
         return self.current_letter if self.mode() == "letters" else None
 
+    # ── 标准嵌入初始化 (v2) ──────────────────────────
+    def _init_standard_embeddings(self) -> None:
+        """预计算 CNN 标准发音嵌入（CNN/融合模型使用，BP 保持置信度）。
+
+        尝试从缓存加载，失败则从 TTS 音频计算。
+        """
+        import pickle
+        cache_path = ROOT / "results" / "standard_embeddings_cnn.pkl"
+        try:
+            if cache_path.exists():
+                with open(cache_path, "rb") as f:
+                    std_emb = pickle.load(f)
+                if isinstance(std_emb, dict) and len(std_emb) >= 20:
+                    self.cnn_standard_embeddings = std_emb
+                    self.pron_scorer.set_standard_embeddings(std_emb)
+                    print(f"[嵌入] 从缓存加载 CNN 标准嵌入 ({len(std_emb)}个)")
+                    return
+        except Exception:
+            pass
+
+        try:
+            dataset = self.dataset_for_mode()
+            std_emb = self.model_manager.compute_standard_embeddings(
+                "CNN", dataset)
+            self.cnn_standard_embeddings = std_emb
+            if len(std_emb) >= 20:
+                self.pron_scorer.set_standard_embeddings(std_emb)
+                cache_path.parent.mkdir(exist_ok=True)
+                with open(cache_path, "wb") as f:
+                    pickle.dump(std_emb, f)
+                print(f"[嵌入] 计算并缓存 CNN 标准嵌入 ({len(std_emb)}个)")
+            else:
+                print(f"[嵌入] CNN 标准嵌入不足 ({len(std_emb)}个)，回退到置信度模式")
+                self.pron_scorer.use_embedding = False
+        except Exception as exc:
+            print(f"[嵌入] CNN 标准嵌入初始化失败: {exc}")
+            self.pron_scorer.use_embedding = False
+
     # ── update_prompt / next_prompt ────────────────────
 
     def update_prompt(self) -> None:
@@ -492,9 +533,17 @@ class SpeakEasyWindow(QMainWindow):
         target = self.target_text()
         dataset = self.dataset_for_mode()
         model_name = self.model_box.currentText()
+        use_embedding_mode = False  # 全部模型使用置信度模式
         try:
             feature = extract_features(self.current_audio, SAMPLE_RATE)
-            result = self.model_manager.predict(model_name, dataset, feature)
+            if use_embedding_mode:
+                # v2: CNN/融合模型 → 提取 128 维嵌入
+                result = self.model_manager.predict_with_embedding(
+                    model_name, dataset, feature)
+            else:
+                # v1: BP 模型 → 保持原有置信度评分
+                result = self.model_manager.predict(
+                    model_name, dataset, feature)
         except Exception as exc:
             self.pred_label.setText("未识别")
             self.conf_label.setText("置信度：--")
@@ -516,7 +565,8 @@ class SpeakEasyWindow(QMainWindow):
             score = int(round(float(result.probabilities[matched_index]) * 100)) \
                 if matched_index is not None else 0
 
-        # ── 三维度融合评分（置信度 + DTW + 声学特征） ──
+        # ── 三维度融合评分 ──
+        # CNN/融合模型 → 嵌入相似度 (v2) | BP 模型 → 置信度 (v1)
         standard_audio = None
         pron_detail = None
         try:
@@ -527,30 +577,49 @@ class SpeakEasyWindow(QMainWindow):
                     self.current_audio, SAMPLE_RATE)
                 std_mfcc_seq = extract_mfcc_sequence(
                     standard_audio, SAMPLE_RATE)
+                target_label = target_for_score.upper() if target_for_score else pred.upper()
                 target_idx = matched_index if matched_index is not None \
                     else int(np.argmax(result.probabilities))
-                pron_result = self.pron_scorer.score(
-                    result.probabilities, target_idx,
-                    user_mfcc_seq=user_mfcc_seq,
-                    template_mfcc_seq=std_mfcc_seq,
-                    user_audio=self.current_audio,
-                    template_audio=standard_audio,
-                )
+                # CNN/融合模型：嵌入相似度；BP：置信度
+                if (use_embedding_mode
+                        and result.embedding is not None
+                        and self.pron_scorer.use_embedding
+                        and target_label in self.pron_scorer.emb_scorer.standard_embeddings):
+                    pron_result = self.pron_scorer.score(
+                        user_embedding=result.embedding,
+                        target_label=target_label,
+                        user_mfcc_seq=user_mfcc_seq,
+                        template_mfcc_seq=std_mfcc_seq,
+                        user_audio=self.current_audio,
+                        template_audio=standard_audio,
+                    )
+                else:
+                    # BP 模型（或回退）：v1 置信度模式
+                    pron_result = self.pron_scorer.score(
+                        softmax_probs=result.probabilities,
+                        target_class_idx=target_idx,
+                        user_mfcc_seq=user_mfcc_seq,
+                        template_mfcc_seq=std_mfcc_seq,
+                        user_audio=self.current_audio,
+                        template_audio=standard_audio,
+                    )
                 score = int(round(pron_result.total_score))
                 pron_detail = pron_result
         except Exception:
             import traceback as _tb
             print("[三维度评分失败，回退到置信度评分]", file=sys.stderr)
             _tb.print_exc(file=sys.stderr)
-            # 回退到仅置信度评分，不中断程序
         self.current_standard = standard_audio
 
         try:
             feedback, stars, color = score_text(score)
             self.pred_label.setText(f"{pred}")
             if pron_detail is not None:
+                scoring_mode = pron_detail.detail.get("scoring_mode", "confidence")
+                first_name = "嵌入" if scoring_mode == "embedding" else "置信"
+                first_score = pron_detail.conf_score  # conf_score 存第一维度分数
                 self.conf_label.setText(
-                    f"综合{score}分 | 置信{pron_detail.conf_score:.0f} "
+                    f"综合{score}分 | {first_name}{first_score:.0f} "
                     f"DTW{pron_detail.dtw_score:.0f} 声学{pron_detail.acoustic_score:.0f}")
             else:
                 self.conf_label.setText(f"置信度：{result.confidence * 100:.1f}%")

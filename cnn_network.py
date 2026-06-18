@@ -244,10 +244,33 @@ class CNN1D(nn.Module):
                 if m.bias is not None:
                     nn.init.zeros_(m.bias)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.features(x)
-        x = self.classifier(x)
-        return x
+    def forward(self, x: torch.Tensor, return_embedding: bool = False):
+        """Forward pass.
+
+        Parameters
+        ----------
+        x : (B, input_dim)
+        return_embedding : bool
+            If True, also returns the 128-dim penultimate embedding
+            (before the final Linear layer), which can be used for
+            pronunciation-quality assessment via embedding similarity.
+
+        Returns
+        -------
+        logits : (B, num_classes)
+        embedding : (B, 128), only if ``return_embedding=True``
+        """
+        feats = self.features(x)
+        # Manually walk classifier to intercept the embedding
+        # classifier = Linear(flat_dim→128) → Norm → SiLU → Dropout → Linear(128→num_classes)
+        embedding = self.classifier[0](feats)    # Linear → 128
+        embedding = self.classifier[1](embedding)  # Norm (LayerNorm/BatchNorm)
+        embedding = self.classifier[2](embedding)  # SiLU
+        # embedding shape: (B, 128) — this is the pronunciation embedding
+        logits = self.classifier[3:](embedding)   # Dropout → Linear(128, num_classes)
+        if return_embedding:
+            return logits, embedding
+        return logits
 
 
 # ═══════════════════════════════════════════════════════════════════════

@@ -25,6 +25,8 @@ data/features/
 成员A.docx
 成员C_实验报告_v3.docx
 
+# Logs
+data/templates/gui_standard
 # OS
 .DS_Store
 Thumbs.db

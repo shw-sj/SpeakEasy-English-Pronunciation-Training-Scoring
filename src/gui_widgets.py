@@ -31,8 +31,7 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from audio_feature import compute_mfcc_frames
-from audio_preprocess import load_audio, preprocess_audio
+from audio_preprocess import load_audio
 from config import PROJECT_ROOT, SAMPLE_RATE, TEMPLATES_DIR
 
 ROOT = PROJECT_ROOT
@@ -164,18 +163,28 @@ class ChartPanel(QWidget):
         layout.addWidget(self.canvas)
         self.clear()
 
+    def _create_axes(self):
+        grid = self.figure.add_gridspec(2, 2, height_ratios=(1.05, 1))
+        ax_conf = self.figure.add_subplot(grid[0, :])
+        ax_wave = self.figure.add_subplot(grid[1, 0])
+        ax_cmp = self.figure.add_subplot(grid[1, 1])
+        return ax_conf, ax_wave, ax_cmp
+
     def clear(self) -> None:
         self.figure.clear()
-        axes = self.figure.subplots(2, 2)
-        titles = ["录音波形", "MFCC频谱", "置信度分布", "标准/用户对比"]
-        for ax, title in zip(axes.flat, titles):
+        self.ax_conf, self.ax_wave, self.ax_cmp = self._create_axes()
+        titles = ["置信度分布", "录音波形", "标准/用户对比"]
+        for ax, title in zip(
+            (self.ax_conf, self.ax_wave, self.ax_cmp), titles
+        ):
             ax.set_title(title)
             ax.grid(alpha=0.2)
+        self.figure.tight_layout()
         self.canvas.draw_idle()
 
     def update_live_wave(self, audio: np.ndarray) -> None:
-        self.figure.axes[0].clear()
-        ax = self.figure.axes[0]
+        self.ax_wave.clear()
+        ax = self.ax_wave
         if audio.size:
             t = np.arange(len(audio)) / SAMPLE_RATE
             ax.plot(t, audio, color="#4b8fe8", linewidth=1.0)
@@ -187,20 +196,14 @@ class ChartPanel(QWidget):
 
     def update_result(self, audio, labels, probabilities, target, standard_audio):
         self.figure.clear()
-        ax_wave, ax_mfcc, ax_conf, ax_cmp = self.figure.subplots(2, 2).flat
+        ax_conf, ax_wave, ax_cmp = self._create_axes()
+        self.ax_conf, self.ax_wave, self.ax_cmp = ax_conf, ax_wave, ax_cmp
 
         t = np.arange(len(audio)) / SAMPLE_RATE
         ax_wave.plot(t, audio, color="#4b8fe8", linewidth=1.0)
         ax_wave.set_title("用户录音波形")
         ax_wave.set_xlabel("时间(s)")
         ax_wave.grid(alpha=0.2)
-
-        processed = preprocess_audio(audio, SAMPLE_RATE)
-        mfcc = compute_mfcc_frames(processed, SAMPLE_RATE)
-        ax_mfcc.imshow(mfcc.T, aspect="auto", origin="lower", cmap="magma")
-        ax_mfcc.set_title("用户MFCC频谱")
-        ax_mfcc.set_xlabel("帧")
-        ax_mfcc.set_ylabel("MFCC")
 
         shown_labels = [display_label(x) for x in labels]
         colors = ["#9fb5d6"] * len(labels)

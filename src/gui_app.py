@@ -1,6 +1,6 @@
 """SpeakEasy main window and entry point."""
 from __future__ import annotations
-import json, random, sys, time, tempfile
+import json, random, sys, time, tempfile, traceback
 from pathlib import Path
 import numpy as np
 import sounddevice as sd
@@ -19,9 +19,10 @@ from api import get_word_info, score_pronunciation_youdao, get_deepseek_suggesti
 from gui_widgets import (
     CircularScoreWidget, ChartPanel, ModelManager, StandardSpeech,
     StatsDialog, SettingsDialog, TrainingPage, FreeReadingInput,
-    FreeModeResultPanel, score_text,
+    FreeModeResultPanel, score_text, display_label,
 )
-from audio_feature import extract_features
+from audio_feature import extract_features, extract_mfcc_sequence
+from pronunciation_scorer import PronunciationScorer
 
 class SpeakEasyWindow(QMainWindow):
     def __init__(self) -> None:
@@ -32,6 +33,7 @@ class SpeakEasyWindow(QMainWindow):
 
         self.model_manager = ModelManager()
         self.standard = StandardSpeech()
+        self.pron_scorer = PronunciationScorer()
         self.history: list[dict] = []
         self.current_audio = np.array([], dtype=np.float32)
         self.current_standard: np.ndarray | None = None
@@ -462,8 +464,15 @@ class SpeakEasyWindow(QMainWindow):
         if not self.frames:
             self.feedback_label.setText("没有录到声音")
             return
-        self.current_audio = np.concatenate(self.frames).astype(np.float32)
-        self.run_prediction()
+        try:
+            self.current_audio = np.concatenate(self.frames).astype(np.float32)
+            self.run_prediction()
+        except Exception:
+            import traceback as _tb
+            print("[stop_recording 异常]", file=sys.stderr)
+            _tb.print_exc(file=sys.stderr)
+            self.feedback_label.setText("评分出错，请重试")
+            self.score_widget.animate_to(0)
 
     def refresh_live_wave(self) -> None:
         if not self.frames:
@@ -498,8 +507,8 @@ class SpeakEasyWindow(QMainWindow):
         target_for_score = target or pred
         labels = [display_label(l) for l in result.labels]
         score = result.score
+        matched_index = None
         if target:
-            matched_index = None
             for i, l in enumerate(labels):
                 if l.lower() == target.lower():
                     matched_index = i
@@ -507,24 +516,59 @@ class SpeakEasyWindow(QMainWindow):
             score = int(round(float(result.probabilities[matched_index]) * 100)) \
                 if matched_index is not None else 0
 
-        feedback, stars, color = score_text(score)
-        self.pred_label.setText(f"{pred}")
-        self.conf_label.setText(f"置信度：{result.confidence * 100:.1f}%")
-        self.feedback_label.setText(f"{stars}  {feedback}")
-        fs = int(18 * self._current_scale)
-        self.feedback_label.setStyleSheet(f"color: {color}; font-size: {fs}px; font-weight: 700;")
-        self.score_widget.animate_to(score)
-
+        # ── 三维度融合评分（置信度 + DTW + 声学特征） ──
         standard_audio = None
+        pron_detail = None
         try:
-            standard_audio = self.standard.load(target_for_score, self.slow_check.isChecked())
+            standard_audio = self.standard.load(
+                target_for_score, self.slow_check.isChecked())
+            if standard_audio is not None and getattr(standard_audio, "size", 0) > 0:
+                user_mfcc_seq = extract_mfcc_sequence(
+                    self.current_audio, SAMPLE_RATE)
+                std_mfcc_seq = extract_mfcc_sequence(
+                    standard_audio, SAMPLE_RATE)
+                target_idx = matched_index if matched_index is not None \
+                    else int(np.argmax(result.probabilities))
+                pron_result = self.pron_scorer.score(
+                    result.probabilities, target_idx,
+                    user_mfcc_seq=user_mfcc_seq,
+                    template_mfcc_seq=std_mfcc_seq,
+                    user_audio=self.current_audio,
+                    template_audio=standard_audio,
+                )
+                score = int(round(pron_result.total_score))
+                pron_detail = pron_result
         except Exception:
-            standard_audio = None
+            import traceback as _tb
+            print("[三维度评分失败，回退到置信度评分]", file=sys.stderr)
+            _tb.print_exc(file=sys.stderr)
+            # 回退到仅置信度评分，不中断程序
         self.current_standard = standard_audio
-        self.chart_panel.update_result(self.current_audio, result.labels,
-                                       result.probabilities, target_for_score,
-                                       standard_audio)
-        self.add_history(target_for_score, pred, score)
+
+        try:
+            feedback, stars, color = score_text(score)
+            self.pred_label.setText(f"{pred}")
+            if pron_detail is not None:
+                self.conf_label.setText(
+                    f"综合{score}分 | 置信{pron_detail.conf_score:.0f} "
+                    f"DTW{pron_detail.dtw_score:.0f} 声学{pron_detail.acoustic_score:.0f}")
+            else:
+                self.conf_label.setText(f"置信度：{result.confidence * 100:.1f}%")
+            self.feedback_label.setText(f"{stars}  {feedback}")
+            fs = int(18 * self._current_scale)
+            self.feedback_label.setStyleSheet(f"color: {color}; font-size: {fs}px; font-weight: 700;")
+            self.score_widget.animate_to(score)
+
+            self.chart_panel.update_result(self.current_audio, result.labels,
+                                           result.probabilities, target_for_score,
+                                           standard_audio)
+            self.add_history(target_for_score, pred, score)
+        except Exception:
+            import traceback as _tb
+            print("[显示/图表更新异常]", file=sys.stderr)
+            _tb.print_exc(file=sys.stderr)
+            self.feedback_label.setText("结果显示异常，请重试")
+            self.score_widget.animate_to(0)
 
     def run_free_mode_scoring(self) -> None:
         """自由朗读：有道评分 + DeepSeek AI 建议"""
@@ -731,6 +775,15 @@ def load_json_config() -> dict:
 def main() -> None:
     load_json_config()
     app = QApplication(sys.argv)
+
+    # ── 全局异常钩子：未捕获异常弹窗显示，避免静默崩溃 ──
+    def _global_excepthook(exc_type, exc_value, exc_tb):
+        msg = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
+        print(f"[未捕获异常]\n{msg}", file=sys.stderr)
+        QMessageBox.critical(None, "程序异常", f"发生未捕获的异常：\n\n{msg}")
+        sys.__excepthook__(exc_type, exc_value, exc_tb)
+    sys.excepthook = _global_excepthook
+
     window = SpeakEasyWindow()
     window.show()
     sys.exit(app.exec_())

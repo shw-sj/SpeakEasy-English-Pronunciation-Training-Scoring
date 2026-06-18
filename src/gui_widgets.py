@@ -254,8 +254,7 @@ class ModelManager:
         input_dim = int(data["input_dim"])
         if model_name == "BP":
             model = BPNetwork(input_size=input_dim, output_size=output_dim,
-                              dropout_rate=float(data.get("dropout_rate", 0.0)),
-                              task=str(data.get("task", dataset))).to(self.device)
+                              dropout_rate=float(data.get("dropout_rate", 0.0))).to(self.device)
         else:
             model = CNN1D(input_dim=input_dim, num_classes=output_dim,
                           dropout_rate=float(data.get("dropout_rate", 0.3))).to(self.device)

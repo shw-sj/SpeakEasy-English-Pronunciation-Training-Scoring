@@ -262,7 +262,13 @@ class ModelManager:
             bidirectional=bool(data.get("bidirectional", True)),
             embedding_dim=int(data.get("embedding_dim", 128)),
         ).to(self.device)
-        model.load_state_dict(data["state_dict"])
+        try:
+            model.load_state_dict(data["state_dict"])
+        except RuntimeError as exc:
+            raise RuntimeError(
+                "当前 LSTM 权重与标准 nn.LSTM 网络结构不兼容，"
+                "请重新运行 lstm_train.py 训练并覆盖旧模型。"
+            ) from exc
         model.eval()
         loaded = (model, labels, mean, std)
         self.cache[key] = loaded

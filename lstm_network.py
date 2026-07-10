@@ -1,14 +1,14 @@
-"""Bidirectional LSTM model for frame-level pronunciation sequences."""
+"""Standard PyTorch LSTM classifier for pronunciation sequences."""
 
 from __future__ import annotations
 
 import torch
 import torch.nn as nn
-from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
+from torch.nn.utils.rnn import pack_padded_sequence
 
 
 class LSTMNetwork(nn.Module):
-    """Classify variable-length MFCC sequences with a BiLSTM and attention."""
+    """Classify variable-length MFCC sequences with ``torch.nn.LSTM``."""
 
     def __init__(
         self,
@@ -38,33 +38,12 @@ class LSTMNetwork(nn.Module):
             bidirectional=bidirectional,
         )
         output_size = hidden_size * (2 if bidirectional else 1)
-        self.attention = nn.Linear(output_size, 1)
         self.embedding = nn.Sequential(
             nn.Linear(output_size, embedding_dim),
-            nn.LayerNorm(embedding_dim),
-            nn.SiLU(),
+            nn.ReLU(),
             nn.Dropout(dropout_rate),
         )
         self.classifier = nn.Linear(embedding_dim, num_classes)
-        self._init_weights()
-
-    def _init_weights(self) -> None:
-        for name, parameter in self.lstm.named_parameters():
-            if "weight_ih" in name:
-                nn.init.xavier_uniform_(parameter)
-            elif "weight_hh" in name:
-                nn.init.orthogonal_(parameter)
-            elif "bias" in name:
-                nn.init.zeros_(parameter)
-                # Positive forget-gate bias helps retain early context.
-                gate_size = parameter.shape[0] // 4
-                parameter.data[gate_size:2 * gate_size].fill_(1.0)
-        nn.init.xavier_uniform_(self.attention.weight)
-        nn.init.zeros_(self.attention.bias)
-        nn.init.xavier_uniform_(self.embedding[0].weight)
-        nn.init.zeros_(self.embedding[0].bias)
-        nn.init.xavier_uniform_(self.classifier.weight)
-        nn.init.zeros_(self.classifier.bias)
 
     def forward(
         self,
@@ -76,25 +55,23 @@ class LSTMNetwork(nn.Module):
             packed = pack_padded_sequence(
                 x, lengths.cpu(), batch_first=True, enforce_sorted=False
             )
-            packed_output, _ = self.lstm(packed)
-            output, _ = pad_packed_sequence(
-                packed_output, batch_first=True, total_length=x.shape[1]
-            )
-            valid = (
-                torch.arange(x.shape[1], device=x.device)[None, :]
-                < lengths[:, None]
+            _, (hidden, _) = self.lstm(packed)
+        else:
+            _, (hidden, _) = self.lstm(x)
+
+        directions = 2 if self.bidirectional else 1
+        hidden = hidden.view(
+            self.num_layers, directions, x.shape[0], self.hidden_size
+        )
+        last_layer = hidden[-1]
+        if self.bidirectional:
+            sequence_summary = torch.cat(
+                (last_layer[0], last_layer[1]), dim=1
             )
         else:
-            output, _ = self.lstm(x)
-            valid = torch.ones(
-                x.shape[:2], dtype=torch.bool, device=x.device
-            )
+            sequence_summary = last_layer[0]
 
-        attention_logits = self.attention(output).squeeze(-1)
-        attention_logits = attention_logits.masked_fill(~valid, -1e4)
-        attention_weights = torch.softmax(attention_logits, dim=1)
-        pooled = torch.sum(output * attention_weights.unsqueeze(-1), dim=1)
-        embedding = self.embedding(pooled)
+        embedding = self.embedding(sequence_summary)
         logits = self.classifier(embedding)
         if return_embedding:
             return logits, embedding

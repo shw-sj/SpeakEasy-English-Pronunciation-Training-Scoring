@@ -143,8 +143,8 @@ def train(args) -> None:
         optimizer, mode="min", factor=0.5, patience=5
     )
 
-    output_path = Path("results") / "best_lstm_letters_best_acc.pth"
-    output_path.parent.mkdir(exist_ok=True)
+    output_path = Path(args.output)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     best_loss = float("inf")
     patience = 0
     train_losses: list[float] = []
@@ -242,6 +242,12 @@ def parse_args():
     parser.add_argument("--clip-grad", type=float, default=5.0)
     parser.add_argument("--patience", type=int, default=15)
     parser.add_argument("--unidirectional", action="store_true")
+    parser.add_argument(
+        "--output",
+        type=str,
+        default="results/best_lstm_letters_best_acc.pth",
+        help="Checkpoint output path (use a new name to avoid overwriting the deployed model)",
+    )
     return parser.parse_args()
 
 

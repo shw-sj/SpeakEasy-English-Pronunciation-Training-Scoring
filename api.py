@@ -19,9 +19,8 @@ import wave
 import requests
 import numpy as np
 
-# ============================================================
+
 # 第一部分：Free Dictionary API —— 单词查询 + 中文释义
-# ============================================================
 
 # 内置常用词中文词典
 _CN_DICT = {
@@ -285,9 +284,9 @@ def get_word_info(word):
         return None
 
 
-# ============================================================
+
 # 第二部分：有道智云语音评测 API —— 发音评分
-# ============================================================
+
 
 YOUDAO_URL = 'https://openapi.youdao.com/iseapi'
 APP_KEY = '4d04588dd0fe5ead'
@@ -416,9 +415,7 @@ def score_pronunciation_youdao(audio: np.ndarray, text: str,
     return result
 
 
-# ============================================================
 # 第三部分：DeepSeek API —— 智能改进建议
-# ============================================================
 
 DEEPSEEK_API_KEY = 'sk-a241a3c7a1204d06984bf35e78d4ba32'
 DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions'
@@ -512,9 +509,7 @@ def get_deepseek_suggestions(word: str, phonetic: str, definitions: list,
         return ""
 
 
-# ============================================================
 # 第四部分：综合评分接口（融合有道 + DeepSeek）
-# ============================================================
 
 def comprehensive_score(audio: np.ndarray, word: str,
                         sample_rate: int = 16000) -> dict:
@@ -551,9 +546,7 @@ def comprehensive_score(audio: np.ndarray, word: str,
     }
 
 
-# ============================================================
 # 测试代码
-# ============================================================
 
 if __name__ == "__main__":
     # 测试单词查询
